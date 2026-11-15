@@ -2,8 +2,12 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <title>CineVault — Stream Movies & TV Series</title>
+
+    <!-- 1. CineVault Custom Play Logo Favicon (Inline SVG) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%23be123c'/%3E%3Cstop offset='50%25' stop-color='%23e11d48'/%3E%3Cstop offset='100%25' stop-color='%23fb7185'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M25 19.5c0-1.7 1.9-2.7 3.3-1.8l21 12.5c1.4.8 1.4 2.8 0 3.6l-21 12.5c-1.4.9-3.3-.1-3.3-1.8v-25z' fill='%23ffffff'/%3E%3C/svg%3E">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -21,6 +25,7 @@
                     },
                     colors: {
                         brand: {
+                            400: '#fb7185',
                             500: '#e11d48',
                             600: '#be123c',
                             700: '#9f1239',
@@ -41,11 +46,12 @@
             background-color: #07090e;
             color: #f3f4f6;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
-            height: 8px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
             background: #0c1017;
@@ -57,306 +63,403 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #e11d48;
         }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
         .hero-gradient {
-            background: linear-gradient(90deg, #07090e 0%, rgba(7, 9, 14, 0.88) 45%, rgba(7, 9, 14, 0.25) 100%),
-                        linear-gradient(180deg, rgba(7, 9, 14, 0) 60%, #07090e 100%);
+            background: linear-gradient(90deg, #07090e 0%, rgba(7, 9, 14, 0.90) 45%, rgba(7, 9, 14, 0.35) 100%),
+                        linear-gradient(180deg, rgba(7, 9, 14, 0.25) 0%, rgba(7, 9, 14, 0) 50%, #07090e 100%);
         }
         .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card-hover:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 20px 30px -10px rgba(225, 29, 72, 0.25);
+        @media (min-width: 768px) {
+            .card-hover:hover {
+                transform: translateY(-6px) scale(1.02);
+                box-shadow: 0 20px 30px -10px rgba(225, 29, 72, 0.28);
+            }
         }
         .lights-off-overlay {
-            background: rgba(0, 0, 0, 0.96);
+            background: rgba(0, 0, 0, 0.97) !important;
+        }
+        @keyframes pulseSkeleton {
+            0%, 100% { opacity: 0.45; }
+            50% { opacity: 0.85; }
+        }
+        .skeleton {
+            animation: pulseSkeleton 1.6s ease-in-out infinite;
+            background: linear-gradient(110deg, #151b26 8%, #1f2937 18%, #151b26 33%);
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
 
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-40 backdrop-blur-xl bg-dark-950/85 border-b border-white/10 transition-all">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-            <!-- Brand Logo & Nav Links -->
-            <div class="flex items-center gap-8">
-                <a href="#" onclick="switchTab('home'); return false;" class="flex items-center gap-2.5 group">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-rose-400 flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
-                        <i class="fa-solid fa-play text-white text-lg ml-0.5"></i>
-                    </div>
-                    <span class="font-display font-extrabold text-2xl tracking-tight text-white">
-                        Cine<span class="text-brand-500">Vault</span>
-                    </span>
-                </a>
+    <!-- =========================================================
+         RESPONSIVE HEADER (2 clean rows on mobile, 1 row on desktop)
+         ========================================================= -->
+    <header class="sticky top-0 z-40 backdrop-blur-xl bg-dark-950/90 border-b border-white/10 transition-all">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 md:py-0 md:h-20 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5 md:gap-4">
 
-                <nav class="hidden md:flex items-center gap-1">
-                    <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-white bg-white/10 transition">
-                        <i class="fa-solid fa-Compass mr-1.5 text-brand-500"></i> Home
-                    </button>
-                    <button onclick="switchTab('movies')" id="nav-movies" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition">
-                        <i class="fa-solid fa-film mr-1.5"></i> Movies
-                    </button>
-                    <button onclick="switchTab('tv')" id="nav-tv" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition">
-                        <i class="fa-solid fa-tv mr-1.5"></i> TV Series
-                    </button>
-                    <button onclick="switchTab('watchlist')" id="nav-watchlist" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-bookmark"></i> Watchlist
-                        <span id="watchlist-badge" class="px-1.5 py-0.5 text-xs rounded-full bg-brand-500 text-white font-bold hidden">0</span>
-                    </button>
-                </nav>
-            </div>
+            <!-- Top Row on Mobile: Brand Logo + Desktop Nav + Mobile Action Buttons -->
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center gap-6 lg:gap-8">
+                    <!-- CineVault Logo -->
+                    <a href="#" onclick="switchTab('home'); return false;" class="flex items-center gap-2.5 group shrink-0">
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-brand-500 to-rose-400 flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
+                            <i class="fa-solid fa-play text-white text-base sm:text-lg ml-0.5"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-display font-extrabold text-xl sm:text-2xl tracking-tight text-white leading-none">
+                                Cine<span class="text-brand-500">Vault</span>
+                            </span>
+                            <span class="text-[9px] uppercase tracking-widest text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> TMDB + OMDb Live
+                            </span>
+                        </div>
+                    </a>
 
-            <!-- Search Bar & Quick Actions -->
-            <div class="flex items-center gap-3 flex-1 max-w-md justify-end">
-                <div class="relative w-full">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input
-                        id="search-input"
-                        type="text"
-                        placeholder="Search movies, TV shows, or IMDB/TMDB ID..."
-                        class="w-full pl-10 pr-9 py-2.5 bg-dark-800/90 border border-white/10 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition"
-                        oninput="handleSearchInput(this.value)"
-                        onkeydown="if(event.key === 'Enter') executeLiveSearch(this.value)"
-                    >
-                    <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                    <!-- Desktop Navigation Links -->
+                    <nav class="hidden md:flex items-center gap-1">
+                        <button onclick="switchTab('home')" id="nav-home" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-medium text-white bg-white/10 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-compass text-brand-500"></i> Home
+                        </button>
+                        <button onclick="switchTab('movies')" id="nav-movies" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-film"></i> Movies
+                        </button>
+                        <button onclick="switchTab('tv')" id="nav-tv" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-tv"></i> TV Series
+                        </button>
+                        <button onclick="switchTab('watchlist')" id="nav-watchlist" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-bookmark"></i> Watchlist
+                            <span id="watchlist-badge" class="px-1.5 py-0.5 text-[11px] rounded-full bg-brand-500 text-white font-bold hidden">0</span>
+                        </button>
+                    </nav>
                 </div>
 
-                <!-- Direct ID Stream Modal Trigger -->
+                <!-- Mobile-Only Quick Action Buttons (Right side of Row 1) -->
+                <div class="flex md:hidden items-center gap-2">
+                    <button
+                        onclick="openDirectPlayModal()"
+                        class="px-3 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-rose-600 text-white text-xs font-semibold shadow-md shadow-brand-600/20 flex items-center gap-1.5 active:scale-95 transition"
+                    >
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Direct ID</span>
+                    </button>
+                    <button
+                        onclick="openSettingsModal()"
+                        aria-label="Settings"
+                        class="w-9 h-9 rounded-xl bg-dark-800 border border-white/10 text-gray-300 hover:text-white flex items-center justify-center active:scale-95 transition"
+                    >
+                        <i class="fa-solid fa-gear text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Row 2 on Mobile / Right Side on Desktop: Full-Width Responsive Search Form + Desktop Quick Buttons -->
+            <div class="flex items-center gap-2.5 flex-1 md:max-w-md lg:max-w-lg justify-end w-full">
+                <form onsubmit="event.preventDefault(); executeLiveSearch(document.getElementById('search-input').value);" class="relative flex items-center w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs sm:text-sm pointer-events-none"></i>
+                    <input
+                        id="search-input"
+                        type="search"
+                        enterkeyhint="search"
+                         autocomplete="off"
+                        placeholder="Search movies, series, or IMDB ID (tt...)..."
+                        class="w-full pl-9 sm:pl-10 pr-24 sm:pr-28 py-2 sm:py-2.5 bg-dark-800/95 border border-white/15 rounded-xl text-xs sm:text-sm text-white placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition"
+                        oninput="handleSearchInput(this.value)"
+                    >
+                    <!-- Clear Search X Button -->
+                    <button
+                        type="button"
+                        id="clear-search-btn"
+                        onclick="clearSearch()"
+                        aria-label="Clear search"
+                        class="hidden absolute right-[74px] sm:right-[82px] top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white flex items-center justify-center text-xs transition"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <!-- Explicit Mobile & Desktop Search Submit Button -->
+                    <button
+                        type="submit"
+                        class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 sm:px-3.5 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1"
+                    >
+                        <span>Search</span>
+                    </button>
+                </form>
+
+                <!-- Desktop-Only Action Buttons -->
                 <button
                     onclick="openDirectPlayModal()"
                     title="Stream directly by IMDB or TMDB ID"
-                    class="shrink-0 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-500 hover:to-rose-500 text-white text-xs sm:text-sm font-semibold shadow-lg shadow-brand-600/25 flex items-center gap-2 transition"
+                    class="hidden md:flex shrink-0 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-500 hover:to-rose-500 text-white text-xs lg:text-sm font-semibold shadow-lg shadow-brand-600/25 items-center gap-2 transition"
                 >
                     <i class="fa-solid fa-bolt"></i>
-                    <span class="hidden sm:inline">Direct ID</span>
+                    <span>Direct ID</span>
                 </button>
 
-                <!-- TMDB API Key Settings -->
                 <button
                     onclick="openSettingsModal()"
                     title="API & Player Settings"
-                    class="shrink-0 w-10 h-10 rounded-xl bg-dark-800 border border-white/10 hover:border-white/25 text-gray-300 hover:text-white flex items-center justify-center transition"
+                    class="hidden md:flex shrink-0 w-10 h-10 rounded-xl bg-dark-800 border border-white/10 hover:border-white/25 text-gray-300 hover:text-white items-center justify-center transition"
                 >
                     <i class="fa-solid fa-gear"></i>
                 </button>
             </div>
         </div>
-
-        <!-- Mobile Navigation Bar -->
-        <div class="flex md:hidden items-center justify-around border-t border-white/5 bg-dark-900/90 py-2 px-2">
-            <button onclick="switchTab('home')" class="mobile-nav-btn flex flex-col items-center text-xs text-brand-500 font-medium py-1 px-3 rounded-lg">
-                <i class="fa-solid fa-house mb-1"></i> Home
-            </button>
-            <button onclick="switchTab('movies')" class="mobile-nav-btn flex flex-col items-center text-xs text-gray-400 font-medium py-1 px-3 rounded-lg">
-                <i class="fa-solid fa-film mb-1"></i> Movies
-            </button>
-            <button onclick="switchTab('tv')" class="mobile-nav-btn flex flex-col items-center text-xs text-gray-400 font-medium py-1 px-3 rounded-lg">
-                <i class="fa-solid fa-tv mb-1"></i> TV Shows
-            </button>
-            <button onclick="switchTab('watchlist')" class="mobile-nav-btn flex flex-col items-center text-xs text-gray-400 font-medium py-1 px-3 rounded-lg">
-                <i class="fa-solid fa-bookmark mb-1"></i> Watchlist
-            </button>
-        </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 pb-16">
+    <!-- =========================================================
+         MAIN CONTENT AREA
+         ========================================================= -->
+    <main class="flex-1 pb-24 md:pb-16">
 
-        <!-- HERO BANNER SECTION (Shown on Home Tab) -->
-        <section id="hero-section" class="relative w-full h-[460px] sm:h-[520px] overflow-hidden">
-            <div id="hero-backdrop" class="absolute inset-0 bg-cover bg-center transition-all duration-700 scale-105" style="background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1920&q=80');"></div>
+        <!-- HERO BANNER SECTION (Dynamically populated from real TMDB Trending API) -->
+        <section id="hero-section" class="relative w-full min-h-[420px] sm:min-h-[500px] lg:min-h-[550px] flex items-end sm:items-center overflow-hidden border-b border-white/5">
+            <!-- Dynamic TMDB Backdrop -->
+            <div id="hero-backdrop" class="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 scale-105 bg-dark-900"></div>
             <div class="absolute inset-0 hero-gradient"></div>
 
-            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center">
-                <div class="max-w-2xl space-y-4">
-                    <div class="flex flex-wrap items-center gap-2.5">
-                        <span id="hero-badge" class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-brand-500 text-white shadow-md">
-                            Featured Blockbuster
+            <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
+                <div class="max-w-2xl space-y-3 sm:space-y-4">
+                    <!-- Badges Row -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="hero-badge" class="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-brand-500 text-white shadow-md">
+                            #1 Trending Today
                         </span>
-                        <span id="hero-rating" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                            <i class="fa-solid fa-star"></i> 8.8
+                        <span id="hero-rating" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                            <i class="fa-solid fa-star"></i> --
                         </span>
-                        <span id="hero-meta" class="text-xs font-medium text-gray-300 bg-white/10 px-2.5 py-1 rounded-lg">
-                            2024 • Sci-Fi / Adventure • IMDB: tt15239678
+                        <span id="hero-meta" class="text-[11px] sm:text-xs font-medium text-gray-200 bg-white/10 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
+                            Loading real TMDB data...
                         </span>
                     </div>
 
-                    <h1 id="hero-title" class="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-none">
-                        Dune: Part Two
+                    <!-- Title -->
+                    <h1 id="hero-title" class="font-display text-2xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                        Loading Trending Hits...
                     </h1>
 
-                    <p id="hero-desc" class="text-gray-300 text-sm sm:text-base line-clamp-3 leading-relaxed">
-                        Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the universe, he endeavors to prevent a terrible future.
+                    <!-- Plot Overview -->
+                    <p id="hero-desc" class="text-gray-300 text-xs sm:text-base line-clamp-3 leading-relaxed max-w-xl">
+                        Fetching live movies, TV series, official backdrops, and IMDb metadata directly from TMDB and OMDb APIs...
                     </p>
 
-                    <div class="pt-2 flex flex-wrap items-center gap-3">
-                        <button id="hero-play-btn" onclick="playMediaById('dune-2')" class="px-6 py-3.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-semibold text-sm sm:text-base shadow-xl shadow-brand-500/30 flex items-center gap-2.5 transition transform hover:scale-105">
+                    <!-- Action Buttons -->
+                    <div class="pt-2 flex flex-wrap items-center gap-2.5 sm:gap-3">
+                        <button id="hero-play-btn" onclick="playHeroCurrent()" class="px-5 sm:px-7 py-3 sm:py-3.5 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-95 text-white font-semibold text-xs sm:text-base shadow-xl shadow-brand-500/30 flex items-center gap-2 transition">
                             <i class="fa-solid fa-play"></i> Watch Now
                         </button>
-                        <button id="hero-watchlist-btn" onclick="toggleWatchlist('dune-2')" class="px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-semibold text-sm sm:text-base border border-white/15 flex items-center gap-2 transition">
-                            <i class="fa-solid fa-plus"></i> Add to Watchlist
+                        <button id="hero-watchlist-btn" onclick="toggleHeroWatchlist()" class="px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 backdrop-blur-md text-white font-semibold text-xs sm:text-base border border-white/15 flex items-center gap-2 transition">
+                            <i class="fa-solid fa-plus"></i> Watchlist
+                        </button>
+                        <button onclick="prevNextHero(1)" class="p-3 sm:p-3.5 rounded-xl bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white border border-white/10 transition" title="Next Featured Title">
+                            <i class="fa-solid fa-forward"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Hero Carousel Indicators -->
-            <div id="hero-indicators" class="absolute bottom-6 right-6 z-20 flex items-center gap-2"></div>
+            <!-- Hero Slide Dots -->
+            <div id="hero-indicators" class="absolute bottom-3 sm:bottom-6 right-4 sm:right-8 z-20 flex items-center gap-1.5 sm:gap-2"></div>
         </section>
 
-        <!-- Category & Filter Bar -->
-        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-                <!-- Genre Pills -->
-                <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 no-scrollbar" id="genre-filters">
-                    <button onclick="filterByGenre('All')" data-genre="All" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-500 text-white shadow-md shrink-0 transition">All Titles</button>
-                    <button onclick="filterByGenre('Action')" data-genre="Action" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Action</button>
-                    <button onclick="filterByGenre('Sci-Fi')" data-genre="Sci-Fi" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Sci-Fi</button>
-                    <button onclick="filterByGenre('Drama')" data-genre="Drama" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Drama</button>
-                    <button onclick="filterByGenre('Thriller')" data-genre="Thriller" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Thriller</button>
-                    <button onclick="filterByGenre('Crime')" data-genre="Crime" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Crime</button>
-                    <button onclick="filterByGenre('Animation')" data-genre="Animation" class="genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Animation</button>
+        <!-- GENRE PILLS & FILTER BAR -->
+        <section class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-5 sm:pt-6">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 sm:pb-6 border-b border-white/10">
+                <!-- Scrollable Genre Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1.5 sm:pb-0 no-scrollbar" id="genre-filters">
+                    <button onclick="filterByGenre('All')" data-genre="All" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-500 text-white shadow-md shrink-0 transition">All Trending</button>
+                    <button onclick="filterByGenre('Action')" data-genre="Action" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Action</button>
+                    <button onclick="filterByGenre('Sci-Fi')" data-genre="Sci-Fi" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Sci-Fi & Fantasy</button>
+                    <button onclick="filterByGenre('Drama')" data-genre="Drama" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Drama</button>
+                    <button onclick="filterByGenre('Thriller')" data-genre="Thriller" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Thriller</button>
+                    <button onclick="filterByGenre('Crime')" data-genre="Crime" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Crime</button>
+                    <button onclick="filterByGenre('Comedy')" data-genre="Comedy" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Comedy</button>
+                    <button onclick="filterByGenre('Horror')" data-genre="Horror" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Horror</button>
+                    <button onclick="filterByGenre('Animation')" data-genre="Animation" class="genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition">Animation</button>
                 </div>
 
-                <!-- Live API Search Button -->
-                <div class="flex items-center gap-2 shrink-0">
-                    <span class="text-xs text-gray-400 hidden lg:inline">Can't find a show?</span>
-                    <button onclick="triggerGlobalSearchPrompt()" class="px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-200 flex items-center gap-2 transition">
-                        <i class="fa-solid fa-cloud-arrow-down text-brand-500"></i> Search Global TV/Movie DB
+                <!-- Live Feed Refresh Button -->
+                <div class="flex items-center justify-between lg:justify-end gap-2 shrink-0">
+                    <span id="api-status-indicator" class="text-[11px] text-gray-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-database text-brand-500"></i> Live TMDB & OMDb Connected
+                    </span>
+                    <button onclick="loadInitialTmdbCatalog(true)" class="px-3 py-1.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-200 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-rotate"></i> Refresh
                     </button>
                 </div>
             </div>
         </section>
 
         <!-- CONTINUE WATCHING / RECENTLY PLAYED -->
-        <section id="recently-watched-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 hidden">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
+        <section id="recently-watched-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8 hidden">
+            <div class="flex items-center justify-between mb-3.5">
+                <h2 class="font-display text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
                     <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Continue Watching
                 </h2>
                 <button onclick="clearRecentlyWatched()" class="text-xs text-gray-400 hover:text-rose-400 transition">
                     Clear History
                 </button>
             </div>
-            <div id="recently-watched-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+            <div id="recently-watched-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
         </section>
 
-        <!-- SEARCH RESULTS SECTION (Hidden unless searching) -->
-        <section id="search-results-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 hidden">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <!-- LIVE SEARCH RESULTS SECTION -->
+        <section id="search-results-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8 hidden">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
                 <div>
-                    <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2">
+                    <h2 class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
                         <i class="fa-solid fa-magnifying-glass text-brand-500"></i>
                         <span id="search-heading">Search Results</span>
                     </h2>
-                    <p id="search-subheading" class="text-xs text-gray-400 mt-1">Showing matching catalog & online database results</p>
+                    <p id="search-subheading" class="text-xs text-gray-400 mt-0.5">Querying TMDB & OMDb live databases...</p>
                 </div>
-                <button onclick="clearSearch()" class="px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-xs font-semibold text-gray-300 border border-white/10">
-                    <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to Catalog
+                <button onclick="clearSearch()" class="px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-xs font-semibold text-gray-200 border border-white/10 flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Home
                 </button>
             </div>
-            <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+            <div id="search-results-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
         </section>
 
-        <!-- MAIN CATALOG SECTIONS -->
-        <div id="catalog-container" class="space-y-12">
+        <!-- MAIN LIVE CATALOG SECTIONS -->
+        <div id="catalog-container" class="space-y-10 sm:space-y-12">
             <!-- Trending Movies Section -->
-            <section id="movies-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-                <div class="flex items-center justify-between mb-5">
+            <section id="movies-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+                <div class="flex items-center justify-between mb-4 sm:mb-5">
                     <div>
-                        <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2.5">
+                        <h2 id="movies-section-title" class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
                             <span class="w-1.5 h-6 rounded-full bg-brand-500 inline-block"></span>
-                            Trending Movies
+                            Trending Movies This Week
                         </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Instant stream via <code class="text-rose-400">/embed/movie/{id}</code></p>
+                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Live from TMDB • Instant stream via <code class="text-rose-400">/embed/movie/{id}</code></p>
                     </div>
                 </div>
-                <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+                <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
             </section>
 
-            <!-- Popular TV Series Section -->
-            <section id="tv-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between mb-5">
+            <!-- Trending TV Series Section -->
+            <section id="tv-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between mb-4 sm:mb-5">
                     <div>
-                        <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2.5">
+                        <h2 id="tv-section-title" class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
                             <span class="w-1.5 h-6 rounded-full bg-amber-500 inline-block"></span>
-                            Popular TV Series
+                            Trending TV Series This Week
                         </h2>
-                        <p class="text-xs text-gray-400 mt-0.5">Multi-format episode streaming via <code class="text-amber-400">/embed/tv/{id}/{season}/{episode}</code></p>
+                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Live from TMDB • Real Seasons & Episodes via <code class="text-amber-400">/embed/tv/{id}/{season}/{episode}</code></p>
                     </div>
                 </div>
-                <div id="tv-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+                <div id="tv-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
+            </section>
+
+            <!-- Top Rated / Acclaimed Movies Section -->
+            <section id="top-rated-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between mb-4 sm:mb-5">
+                    <div>
+                        <h2 class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
+                            <span class="w-1.5 h-6 rounded-full bg-emerald-500 inline-block"></span>
+                            Top Rated Classics & Blockbusters
+                        </h2>
+                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Highest rated movies on TMDB & IMDb</p>
+                    </div>
+                </div>
+                <div id="top-rated-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
             </section>
         </div>
 
         <!-- WATCHLIST SECTION -->
-        <section id="watchlist-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 hidden">
-            <div class="flex items-center justify-between mb-6">
+        <section id="watchlist-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8 hidden">
+            <div class="flex items-center justify-between mb-5">
                 <div>
-                    <h2 class="font-display text-2xl font-bold text-white flex items-center gap-2.5">
+                    <h2 class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
                         <i class="fa-solid fa-bookmark text-brand-500"></i> My Watchlist
                     </h2>
-                    <p class="text-xs text-gray-400 mt-1">Saved movies and TV series on your device</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Saved movies and TV series on your device</p>
                 </div>
             </div>
-            <div id="watchlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5"></div>
+            <div id="watchlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
         </section>
 
     </main>
 
-    <!-- VIDEO PLAYER MODAL (Theatre Mode) -->
+    <!-- =========================================================
+         MOBILE FIXED BOTTOM NAVIGATION BAR
+         ========================================================= -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-950/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        <button onclick="switchTab('home')" id="mnav-home" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-brand-500 font-semibold text-[11px] transition">
+            <i class="fa-solid fa-compass text-base mb-0.5"></i>
+            <span>Home</span>
+        </button>
+        <button onclick="switchTab('movies')" id="mnav-movies" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-gray-400 font-medium text-[11px] transition">
+            <i class="fa-solid fa-film text-base mb-0.5"></i>
+            <span>Movies</span>
+        </button>
+        <button onclick="switchTab('tv')" id="mnav-tv" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-gray-400 font-medium text-[11px] transition">
+            <i class="fa-solid fa-tv text-base mb-0.5"></i>
+            <span>TV Series</span>
+        </button>
+        <button onclick="switchTab('watchlist')" id="mnav-watchlist" class="mobile-nav-btn relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-gray-400 font-medium text-[11px] transition">
+            <i class="fa-solid fa-bookmark text-base mb-0.5"></i>
+            <span>Watchlist</span>
+            <span id="mobile-watchlist-badge" class="hidden absolute top-0.5 right-2 w-4 h-4 rounded-full bg-brand-500 text-white text-[9px] font-bold flex items-center justify-center">0</span>
+        </button>
+    </nav>
+
+    <!-- =========================================================
+         VIDEO PLAYER MODAL (With Real TMDB Seasons/Episodes & OMDb Info)
+         ========================================================= -->
     <div id="player-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/90 backdrop-blur-xl transition-opacity">
-        <div class="min-h-screen px-3 sm:px-6 py-6 flex flex-col justify-center max-w-6xl mx-auto">
-            
-            <!-- Top Bar above Player -->
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 bg-dark-900/90 border border-white/10 px-4 py-3 rounded-2xl">
-                <div class="flex items-center gap-3">
-                    <button onclick="closePlayerModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-brand-500 text-white flex items-center justify-center transition" title="Close Player">
-                        <i class="fa-solid fa-arrow-left"></i>
+        <div class="min-h-screen px-2.5 sm:px-6 py-4 sm:py-6 flex flex-col justify-start max-w-6xl mx-auto">
+
+            <!-- Top Controls Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2.5 mb-3 sm:mb-4 bg-dark-900/95 border border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl">
+                <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                    <button onclick="closePlayerModal()" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl bg-white/10 hover:bg-brand-500 text-white flex items-center justify-center transition" title="Close Player">
+                        <i class="fa-solid fa-arrow-left text-sm"></i>
                     </button>
-                    <div>
+                    <div class="min-w-0">
                         <div class="flex items-center gap-2">
-                            <span id="player-type-badge" class="px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-brand-500 text-white">MOVIE</span>
-                            <h3 id="player-title" class="font-display font-bold text-lg sm:text-xl text-white">Movie Title</h3>
+                            <span id="player-type-badge" class="shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-brand-500 text-white">MOVIE</span>
+                            <h3 id="player-title" class="font-display font-bold text-sm sm:text-xl text-white truncate">Title</h3>
                         </div>
-                        <p id="player-subtitle" class="text-xs text-gray-400">IMDB ID: tt0000000</p>
+                        <p id="player-subtitle" class="text-[11px] sm:text-xs text-gray-400 truncate mt-0.5">Resolving TMDB & IMDb IDs...</p>
                     </div>
                 </div>
 
-                <!-- Right Controls: ID Type Switcher, Lights Off & Close -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <!-- Toggle between IMDB ID (tt...) and TMDB ID (numeric) -->
-                    <div class="flex items-center bg-dark-800 p-1 rounded-xl border border-white/10 text-xs">
-                        <button id="id-mode-imdb" onclick="setPlayerIdMode('imdb')" class="px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition">
-                            IMDB ID
+                <!-- Right Controls: ID Mode Switcher, Lights Off & Close -->
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <!-- Switch between TMDB ID and IMDB ID -->
+                    <div class="flex items-center bg-dark-800 p-0.5 sm:p-1 rounded-xl border border-white/10 text-[11px] sm:text-xs">
+                        <button id="id-mode-tmdb" onclick="setPlayerIdMode('tmdb')" class="px-2 sm:px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition">
+                            TMDB
                         </button>
-                        <button id="id-mode-tmdb" onclick="setPlayerIdMode('tmdb')" class="px-2.5 py-1 rounded-lg font-semibold text-gray-400 hover:text-white transition">
-                            TMDB ID
+                        <button id="id-mode-imdb" onclick="setPlayerIdMode('imdb')" class="px-2 sm:px-2.5 py-1 rounded-lg font-semibold text-gray-400 hover:text-white transition">
+                            IMDB
                         </button>
                     </div>
 
-                    <button onclick="toggleLightsOff()" id="lights-off-btn" class="px-3 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-300 flex items-center gap-1.5 transition">
+                    <button onclick="toggleLightsOff()" id="lights-off-btn" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-300 flex items-center gap-1.5 transition">
                         <i class="fa-solid fa-lightbulb text-amber-400"></i>
                         <span class="hidden sm:inline">Lights Off</span>
                     </button>
 
-                    <button onclick="closePlayerModal()" class="px-3 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-semibold transition">
-                        <i class="fa-solid fa-xmark mr-1"></i> Close
+                    <button onclick="closePlayerModal()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-semibold transition">
+                        <i class="fa-solid fa-xmark"></i>
+                        <span class="hidden sm:inline ml-1">Close</span>
                     </button>
                 </div>
             </div>
 
-            <!-- 16:9 Responsive Iframe Container -->
+            <!-- 16:9 Video Iframe Wrapper -->
             <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-brand-500/10 border border-white/15">
-                <!-- Loading Spinner behind Iframe -->
-                <div id="iframe-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-dark-950 z-0">
-                    <div class="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p class="text-xs text-gray-400">Connecting to stream server (<span id="loader-url-preview" class="text-gray-200 font-mono">vaplayer.ru</span>)...</p>
+                <div id="iframe-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-dark-950 z-0 p-4 text-center">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+                    <p class="text-xs text-gray-300">Connecting stream (<span id="loader-url-preview" class="text-brand-400 font-mono break-all">vaplayer.ru</span>)...</p>
                 </div>
 
-                <!-- Actual Video Player Iframe -->
                 <iframe
                     id="video-iframe"
                     src=""
@@ -368,77 +471,94 @@
                 ></iframe>
             </div>
 
-            <!-- TV SHOW SEASON & EPISODE CONTROLS (Only visible for TV Series) -->
-            <div id="tv-controls-panel" class="mt-4 bg-dark-900/95 border border-white/10 rounded-2xl p-4 sm:p-5 hidden">
-                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
-                    <!-- Season & Episode Pickers -->
-                    <div class="flex flex-wrap items-center gap-3">
+            <!-- TV SHOW SEASON & REAL TMDB EPISODE SELECTOR (Only for TV Series) -->
+            <div id="tv-controls-panel" class="mt-3 sm:mt-4 bg-dark-900/95 border border-white/10 rounded-2xl p-3.5 sm:p-5 hidden">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-3.5 border-b border-white/10">
+                    <!-- Season & Episode Controls -->
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                         <div class="flex items-center gap-2">
                             <label class="text-xs font-semibold uppercase tracking-wider text-gray-400">Season</label>
-                            <select id="tv-season-select" onchange="onSeasonChange()" class="bg-dark-800 border border-white/15 rounded-xl px-3 py-2 text-sm text-white font-semibold focus:outline-none focus:border-brand-500"></select>
+                            <select id="tv-season-select" onchange="onSeasonChange()" class="bg-dark-800 border border-white/15 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-brand-500"></select>
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <label class="text-xs font-semibold uppercase tracking-wider text-gray-400">Episode</label>
-                            <input id="tv-episode-input" type="number" min="1" max="100" value="1" onchange="onEpisodeInputChange(this.value)" class="w-20 bg-dark-800 border border-white/15 rounded-xl px-3 py-2 text-sm text-white font-semibold focus:outline-none focus:border-brand-500">
+                            <label class="text-xs font-semibold uppercase tracking-wider text-gray-400">Ep</label>
+                            <input id="tv-episode-input" type="number" min="1" max="300" value="1" onchange="onEpisodeInputChange(this.value)" class="w-16 sm:w-20 bg-dark-800 border border-white/15 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-brand-500">
                         </div>
 
                         <div class="flex items-center gap-1.5">
-                            <button onclick="stepEpisode(-1)" class="px-3 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-200 transition">
+                            <button onclick="stepEpisode(-1)" class="px-2.5 sm:px-3 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-200 transition">
                                 <i class="fa-solid fa-backward-step mr-1"></i> Prev
                             </button>
-                            <button onclick="stepEpisode(1)" class="px-3 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs font-semibold text-white transition">
+                            <button onclick="stepEpisode(1)" class="px-2.5 sm:px-3 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs font-semibold text-white transition">
                                 Next <i class="fa-solid fa-forward-step ml-1"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- API URL Format Selector (Matches Documentation: Numeric, SxxExx, Dash, Query) -->
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-xs text-gray-400 font-medium">URL Format:</span>
+                    <!-- API URL Format Selector (Numeric, SxxExx, Dash, Query) -->
+                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span class="text-[11px] text-gray-400 font-medium">Embed Format:</span>
                         <div class="flex flex-wrap gap-1 bg-dark-800 p-1 rounded-xl border border-white/10">
-                            <button onclick="setTvUrlFormat('numeric')" data-fmt="numeric" class="tv-fmt-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-500 text-white transition" title="/embed/tv/{id}/{season}/{episode}">
+                            <button onclick="setTvUrlFormat('numeric')" data-fmt="numeric" class="tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold bg-brand-500 text-white transition" title="/embed/tv/{id}/{season}/{episode}">
                                 Numeric (/1/1)
                             </button>
-                            <button onclick="setTvUrlFormat('sxxexx')" data-fmt="sxxexx" class="tv-fmt-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition" title="/embed/tv/{id}/S01E01">
+                            <button onclick="setTvUrlFormat('sxxexx')" data-fmt="sxxexx" class="tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-400 hover:text-white transition" title="/embed/tv/{id}/S01E01">
                                 SxxExx
                             </button>
-                            <button onclick="setTvUrlFormat('dash')" data-fmt="dash" class="tv-fmt-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition" title="/embed/tv/{id}/1-1">
+                            <button onclick="setTvUrlFormat('dash')" data-fmt="dash" class="tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-400 hover:text-white transition" title="/embed/tv/{id}/1-1">
                                 Dash (/1-1)
                             </button>
-                            <button onclick="setTvUrlFormat('query')" data-fmt="query" class="tv-fmt-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition" title="/embed/tv?tmdb={id}&season=1&episode=1">
+                            <button onclick="setTvUrlFormat('query')" data-fmt="query" class="tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-400 hover:text-white transition" title="/embed/tv?tmdb={id}&season=1&episode=1">
                                 Query (?tmdb=)
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Episode Grid -->
-                <div class="mt-4">
-                    <p class="text-xs text-gray-400 mb-2.5 font-medium">Select Episode:</p>
-                    <div id="episode-buttons-grid" class="grid grid-cols-4 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 max-h-36 overflow-y-auto pr-1"></div>
+                <!-- Real TMDB Episode List with Thumbnails & Titles -->
+                <div class="mt-3.5">
+                    <div class="flex items-center justify-between mb-2">
+                        <p id="season-episodes-heading" class="text-xs text-gray-300 font-semibold">Episodes (Live from TMDB)</p>
+                        <span id="season-episodes-count" class="text-[11px] text-gray-400"></span>
+                    </div>
+                    <div id="episode-buttons-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 max-h-60 overflow-y-auto pr-1"></div>
                 </div>
             </div>
 
-            <!-- Embed Code & Active Endpoint Bar -->
-            <div class="mt-4 bg-dark-900/90 border border-white/10 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <!-- REAL OMDB & TMDB METADATA PANEL -->
+            <div id="omdb-details-panel" class="mt-3 sm:mt-4 bg-dark-900/90 border border-white/10 rounded-2xl p-3.5 sm:p-5">
+                <div class="flex flex-col md:flex-row gap-4 items-start">
+                    <img id="player-poster-thumb" src="" alt="Poster" class="hidden sm:block w-20 md:w-24 rounded-xl object-cover border border-white/10 shrink-0">
+                    <div class="flex-1 min-w-0 space-y-2">
+                        <div class="flex flex-wrap items-center gap-2" id="omdb-badges">
+                            <!-- Dynamically populated via OMDb API (IMDb rating, Rated, Runtime, Genre) -->
+                        </div>
+                        <p id="player-overview" class="text-xs sm:text-sm text-gray-300 leading-relaxed"></p>
+                        <div id="omdb-credits" class="text-[11px] sm:text-xs text-gray-400 space-y-1 pt-1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Embed URL & Copy Bar -->
+            <div class="mt-3 sm:mt-4 bg-dark-900/90 border border-white/10 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div class="space-y-1 w-full sm:w-auto overflow-hidden">
                     <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                            GET Embed URL
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            GET Embed Endpoint
                         </span>
-                        <span class="text-xs text-gray-400">Active Iframe Source</span>
+                        <span class="text-xs text-gray-400">Active Player Source</span>
                     </div>
                     <code id="active-embed-url" class="block text-xs sm:text-sm font-mono text-gray-200 truncate select-all">
-                        https://vaplayer.ru/embed/movie/tt15239678
+                        https://vaplayer.ru/embed/movie/1147301
                     </code>
                 </div>
 
                 <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
-                    <button onclick="copyEmbedUrl()" class="px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-semibold text-gray-200 flex items-center gap-1.5 transition">
+                    <button onclick="copyEmbedUrl()" class="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-semibold text-gray-200 flex items-center gap-1.5 transition">
                         <i class="fa-regular fa-copy"></i> Copy URL
                     </button>
-                    <button onclick="copyEmbedHtml()" class="px-3.5 py-2 rounded-xl bg-brand-500/20 hover:bg-brand-500 text-brand-300 hover:text-white border border-brand-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
+                    <button onclick="copyEmbedHtml()" class="flex-1 sm:flex-initial justify-center px-3.5 py-2 rounded-xl bg-brand-500/20 hover:bg-brand-500 text-brand-300 hover:text-white border border-brand-500/30 text-xs font-semibold flex items-center gap-1.5 transition">
                         <i class="fa-solid fa-code"></i> Copy &lt;iframe&gt;
                     </button>
                 </div>
@@ -447,39 +567,39 @@
         </div>
     </div>
 
-    <!-- DIRECT ID STREAM MODAL (Custom IMDB / TMDB ID Tester) -->
+    <!-- =========================================================
+         DIRECT ID STREAM MODAL
+         ========================================================= -->
     <div id="direct-play-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-brand-500/20 border border-brand-500/40 text-brand-400 flex items-center justify-center">
                         <i class="fa-solid fa-bolt"></i>
                     </div>
                     <div>
-                        <h3 class="font-display font-bold text-lg text-white">Direct ID Streamer</h3>
-                        <p class="text-xs text-gray-400">Play any Movie or TV Episode via IMDB or TMDB ID</p>
+                        <h3 class="font-display font-bold text-base sm:text-lg text-white">Direct ID Streamer</h3>
+                        <p class="text-xs text-gray-400">Stream any Movie or TV Episode via IMDB or TMDB ID</p>
                     </div>
                 </div>
-                <button onclick="closeDirectPlayModal()" class="text-gray-400 hover:text-white">
+                <button onclick="closeDirectPlayModal()" class="text-gray-400 hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <div class="space-y-4">
-                <!-- Media Type Selector -->
+            <div class="space-y-3.5">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Content Type</label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="direct-type-movie" onclick="setDirectModalType('movie')" class="py-2.5 px-4 rounded-xl font-semibold text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Content Type</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button id="direct-type-movie" onclick="setDirectModalType('movie')" class="py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition">
                             <i class="fa-solid fa-film"></i> Movie
                         </button>
-                        <button id="direct-type-tv" onclick="setDirectModalType('tv')" class="py-2.5 px-4 rounded-xl font-semibold text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition">
+                        <button id="direct-type-tv" onclick="setDirectModalType('tv')" class="py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition">
                             <i class="fa-solid fa-tv"></i> TV Series
                         </button>
                     </div>
                 </div>
 
-                <!-- ID Input -->
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
                         IMDB ID (<code class="text-brand-400">tt...</code>) or TMDB ID (Numeric)
@@ -489,584 +609,472 @@
                         type="text"
                         placeholder="e.g. tt23779058 or 1147301"
                         value="tt23779058"
-                        class="w-full px-4 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
                     >
-                    <p class="text-[11px] text-gray-400 mt-1">Examples from docs: Movie <code class="text-gray-300">tt23779058</code> / <code class="text-gray-300">1147301</code> • TV <code class="text-gray-300">205715</code> / <code class="text-gray-300">tt13159924</code></p>
+                    <p class="text-[11px] text-gray-400 mt-1">Doc examples: Movie <code class="text-gray-300">tt23779058</code> / <code class="text-gray-300">1147301</code> • TV <code class="text-gray-300">205715</code> / <code class="text-gray-300">tt13159924</code></p>
                 </div>
 
-                <!-- Optional Title Input -->
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Custom Title (Optional)</label>
-                    <input
-                        id="direct-title-input"
-                        type="text"
-                        placeholder="e.g. Custom Movie Stream"
-                        class="w-full px-4 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
-                    >
-                </div>
-
-                <!-- Season & Episode Inputs (Shown when TV Series is selected) -->
                 <div id="direct-tv-fields" class="grid grid-cols-2 gap-3 hidden">
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Season Number</label>
-                        <input id="direct-season-input" type="number" min="1" value="1" class="w-full px-4 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Season Number</label>
+                        <input id="direct-season-input" type="number" min="1" value="1" class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Episode Number</label>
-                        <input id="direct-episode-input" type="number" min="1" value="1" class="w-full px-4 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Episode Number</label>
+                        <input id="direct-episode-input" type="number" min="1" value="1" class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500">
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
                 <button onclick="closeDirectPlayModal()" class="px-4 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-xs font-semibold text-gray-300">
                     Cancel
                 </button>
-                <button onclick="launchDirectStream()" class="px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-brand-500/30 flex items-center gap-2">
-                    <i class="fa-solid fa-play"></i> Launch Player
+                <button onclick="launchDirectStream()" class="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-brand-500/30 flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> Launch Stream
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- SETTINGS & API CONFIGURATION MODAL -->
+    <!-- =========================================================
+         SETTINGS & API KEYS MODAL
+         ========================================================= -->
     <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center">
                         <i class="fa-solid fa-sliders"></i>
                     </div>
                     <div>
-                        <h3 class="font-display font-bold text-lg text-white">Stream & Search Settings</h3>
-                        <p class="text-xs text-gray-400">Configure player base domain and optional TMDB API key</p>
+                        <h3 class="font-display font-bold text-base sm:text-lg text-white">API & Stream Configuration</h3>
+                        <p class="text-xs text-gray-400">Hardcoded TMDB & OMDb keys active</p>
                     </div>
                 </div>
-                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white">
+                <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <div class="space-y-4">
+            <div class="space-y-3.5">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Embed Player Base URL</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Embed Player Base Domain</label>
                     <input
                         id="settings-base-url"
                         type="text"
                         value="https://vaplayer.ru"
-                        class="w-full px-4 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm font-mono focus:outline-none focus:border-brand-500"
+                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm font-mono focus:outline-none focus:border-brand-500"
                     >
-                    <p class="text-[11px] text-gray-400 mt-1">Default from your documentation: <code class="text-gray-300">https://vaplayer.ru</code></p>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">TMDB v3 API Key (Optional for Extended Movie Search)</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">TMDB API Key (Hardcoded Active)</label>
                     <input
                         id="settings-tmdb-key"
-                        type="password"
-                        placeholder="Paste TMDB API key (optional)..."
-                        class="w-full px-4 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
+                        type="text"
+                        readonly
+                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono"
                     >
-                    <p class="text-[11px] text-gray-400 mt-1">
-                        Note: Live search works out-of-the-box without a key using TVMaze & our built-in catalog. Adding a TMDB key unlocks live TMDB movie queries too.
-                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">OMDb API Key (Hardcoded Active)</label>
+                    <input
+                        id="settings-omdb-key"
+                        type="text"
+                        readonly
+                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono"
+                    >
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
-                <button onclick="closeSettingsModal()" class="px-4 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-xs font-semibold text-gray-300">
-                    Cancel
+            <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+                <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-xs font-semibold text-gray-300">
+                    Close
                 </button>
-                <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs sm:text-sm font-semibold text-white">
-                    Save Changes
+                <button onclick="saveSettings()" class="px-5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs sm:text-sm font-semibold text-white">
+                    Save Base URL
                 </button>
             </div>
         </div>
     </div>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 translate-y-2 opacity-0">
-        <div class="bg-dark-800 border border-white/15 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm">
-            <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <div id="toast" class="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-50 hidden transform transition-all duration-300 translate-y-2 opacity-0">
+        <div class="bg-dark-800 border border-white/15 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs sm:text-sm">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
             <span id="toast-message">Action completed</span>
         </div>
     </div>
 
     <!-- FOOTER -->
-    <footer class="border-t border-white/10 bg-dark-950 py-10 mt-auto">
+    <footer class="border-t border-white/10 bg-dark-950 py-8 mb-14 md:mb-0 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-            <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white">
-                    <i class="fa-solid fa-play text-xs"></i>
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-rose-400 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-play text-[10px] ml-0.5"></i>
                 </div>
                 <span class="font-display font-bold text-white text-base">CineVault</span>
-                <span>• Powered by <code class="text-gray-300">vaplayer.ru</code> Embed API</span>
+                <span>• Live Data by TMDB & OMDb • Player by <code class="text-gray-300">vaplayer.ru</code></span>
             </div>
             <div class="flex flex-wrap items-center gap-4">
-                <button onclick="openDirectPlayModal()" class="hover:text-white transition">Test Doc Examples</button>
+                <button onclick="openDirectPlayModal()" class="hover:text-white transition">Direct ID Player</button>
                 <span>•</span>
-                <button onclick="openSettingsModal()" class="hover:text-white transition">API Settings</button>
+                <button onclick="openSettingsModal()" class="hover:text-white transition">API Status</button>
             </div>
         </div>
     </footer>
 
-    <!-- APPLICATION JAVASCRIPT -->
+    <!-- =========================================================
+         APPLICATION JAVASCRIPT (REAL TMDB + OMDB + VAPLAYER API)
+         ========================================================= -->
     <script>
         /**************************************************************
-         * 1. CURATED CATALOG OF MOVIES & TV SERIES (Real IMDB & TMDB IDs)
+         * 1. HARDCODED API KEYS & ENDPOINTS
          **************************************************************/
-        const MEDIA_CATALOG = [
-            // --- MOVIES ---
-            {
-                uid: 'dune-2',
-                type: 'movie',
-                title: 'Dune: Part Two',
-                year: 2024,
-                rating: 8.8,
-                imdbId: 'tt15239678',
-                tmdbId: '693134',
-                genres: ['Sci-Fi', 'Adventure', 'Action'],
-                poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1920&q=80',
-                featured: true,
-                description: 'Paul Atreides unites with Chani and the Fremen while on a warpath of revenge against the conspirators who destroyed his family.'
-            },
-            {
-                uid: 'oppenheimer',
-                type: 'movie',
-                title: 'Oppenheimer',
-                year: 2023,
-                rating: 8.9,
-                imdbId: 'tt15398776',
-                tmdbId: '872585',
-                genres: ['Drama', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=1920&q=80',
-                featured: true,
-                description: 'The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.'
-            },
-            {
-                uid: 'interstellar',
-                type: 'movie',
-                title: 'Interstellar',
-                year: 2014,
-                rating: 8.7,
-                imdbId: 'tt0816692',
-                tmdbId: '157336',
-                genres: ['Sci-Fi', 'Drama'],
-                poster: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80',
-                featured: true,
-                description: 'When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot, Joseph Cooper, is tasked to pilot a spacecraft, along with a team of researchers, to find a new planet for humans.'
-            },
-            {
-                uid: 'the-batman',
-                type: 'movie',
-                title: 'The Batman',
-                year: 2022,
-                rating: 7.8,
-                imdbId: 'tt1877830',
-                tmdbId: '414906',
-                genres: ['Crime', 'Action', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city\'s hidden corruption.'
-            },
-            {
-                uid: 'spiderverse-2',
-                type: 'movie',
-                title: 'Spider-Man: Across the Spider-Verse',
-                year: 2023,
-                rating: 8.6,
-                imdbId: 'tt9362722',
-                tmdbId: '569094',
-                genres: ['Animation', 'Action', 'Sci-Fi'],
-                poster: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence.'
-            },
-            {
-                uid: 'inception',
-                type: 'movie',
-                title: 'Inception',
-                year: 2010,
-                rating: 8.8,
-                imdbId: 'tt1375666',
-                tmdbId: '27205',
-                genres: ['Action', 'Sci-Fi', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.'
-            },
-            {
-                uid: 'john-wick-4',
-                type: 'movie',
-                title: 'John Wick: Chapter 4',
-                year: 2023,
-                rating: 7.7,
-                imdbId: 'tt10366206',
-                tmdbId: '603692',
-                genres: ['Action', 'Thriller', 'Crime'],
-                poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'John Wick uncovers a path to defeating The High Table. But before he can earn his freedom, Wick must face off against a new enemy with powerful alliances.'
-            },
-            {
-                uid: 'blade-runner-2049',
-                type: 'movie',
-                title: 'Blade Runner 2049',
-                year: 2017,
-                rating: 8.0,
-                imdbId: 'tt1856101',
-                tmdbId: '335984',
-                genres: ['Sci-Fi', 'Drama', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'Young Blade Runner K\'s discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who\'s been missing for thirty years.'
-            },
-            {
-                uid: 'mad-max-furiosa',
-                type: 'movie',
-                title: 'Furiosa: A Mad Max Saga',
-                year: 2024,
-                rating: 7.6,
-                imdbId: 'tt12037194',
-                tmdbId: '786892',
-                genres: ['Action', 'Sci-Fi'],
-                poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'As the world fell, young Furiosa is snatched from the Green Place of Many Mothers and falls into the hands of a great Biker Horde led by the Warlord Dementus.'
-            },
-            {
-                uid: 'doc-movie-sample',
-                type: 'movie',
-                title: 'Doc Sample Movie (tt23779058)',
-                year: 2024,
-                rating: 8.1,
-                imdbId: 'tt23779058',
-                tmdbId: '1147301',
-                genres: ['Action', 'Drama'],
-                poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'Pre-configured with the exact IMDB ID (tt23779058) and TMDB ID (1147301) from your API documentation screenshot.'
-            },
+        const TMDB_API_KEY = "dfcc7d929c4e97c540ccbc6d1bbd2d25";
+        const OMDB_API_KEY = "c0350149";
 
-            // --- TV SERIES ---
-            {
-                uid: 'breaking-bad',
-                type: 'tv',
-                title: 'Breaking Bad',
-                year: 2008,
-                rating: 9.5,
-                imdbId: 'tt0903747',
-                tmdbId: '1396',
-                seasons: 5,
-                episodesPerSeason: 13,
-                genres: ['Crime', 'Drama', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?auto=format&fit=crop&w=1920&q=80',
-                featured: true,
-                description: 'A chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine with a former student to secure his family\'s future.'
-            },
-            {
-                uid: 'stranger-things',
-                type: 'tv',
-                title: 'Stranger Things',
-                year: 2016,
-                rating: 8.7,
-                imdbId: 'tt4574334',
-                tmdbId: '66732',
-                seasons: 4,
-                episodesPerSeason: 9,
-                genres: ['Sci-Fi', 'Drama', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.'
-            },
-            {
-                uid: 'the-boys',
-                type: 'tv',
-                title: 'The Boys',
-                year: 2019,
-                rating: 8.7,
-                imdbId: 'tt1190634',
-                tmdbId: '76479',
-                seasons: 4,
-                episodesPerSeason: 8,
-                genres: ['Action', 'Sci-Fi', 'Crime'],
-                poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'A group of vigilantes set out to take down corrupt superheroes who abuse their superpowers.'
-            },
-            {
-                uid: 'house-of-the-dragon',
-                type: 'tv',
-                title: 'House of the Dragon',
-                year: 2022,
-                rating: 8.4,
-                imdbId: 'tt11198330',
-                tmdbId: '94997',
-                seasons: 2,
-                episodesPerSeason: 10,
-                genres: ['Action', 'Drama'],
-                poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'An internal succession war within House Targaryen at the height of its power, 172 years before the birth of Daenerys Targaryen.'
-            },
-            {
-                uid: 'the-last-of-us',
-                type: 'tv',
-                title: 'The Last of Us',
-                year: 2023,
-                rating: 8.8,
-                imdbId: 'tt3581920',
-                tmdbId: '100088',
-                seasons: 1,
-                episodesPerSeason: 9,
-                genres: ['Drama', 'Action', 'Sci-Fi'],
-                poster: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'After a global pandemic destroys civilization, a hardened survivor takes charge of a 14-year-old girl who may be humanity\'s last hope.'
-            },
-            {
-                uid: 'arcane',
-                type: 'tv',
-                title: 'Arcane',
-                year: 2021,
-                rating: 9.0,
-                imdbId: 'tt11126994',
-                tmdbId: '94605',
-                seasons: 2,
-                episodesPerSeason: 9,
-                genres: ['Animation', 'Action', 'Sci-Fi'],
-                poster: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'Set in Utopian Piltover and the oppressed underground of Zaun, the story follows the origins of two iconic League Of Legends champions and the power that will tear them apart.'
-            },
-            {
-                uid: 'severance',
-                type: 'tv',
-                title: 'Severance',
-                year: 2022,
-                rating: 8.7,
-                imdbId: 'tt11280740',
-                tmdbId: '95396',
-                seasons: 2,
-                episodesPerSeason: 9,
-                genres: ['Sci-Fi', 'Drama', 'Thriller'],
-                poster: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'Mark leads a team of office workers whose memories have been surgically divided between their work and personal lives.'
-            },
-            {
-                uid: 'shogun',
-                type: 'tv',
-                title: 'Shōgun',
-                year: 2024,
-                rating: 8.7,
-                imdbId: 'tt2788316',
-                tmdbId: '126308',
-                seasons: 1,
-                episodesPerSeason: 10,
-                genres: ['Drama', 'Action'],
-                poster: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'When a mysterious European ship is found marooned in a nearby Japanese fishing village, Lord Yoshii Toranaga discovers secrets that could tip the scales of power.'
-            },
-            {
-                uid: 'dark',
-                type: 'tv',
-                title: 'Dark',
-                year: 2017,
-                rating: 8.7,
-                imdbId: 'tt5753856',
-                tmdbId: '70523',
-                seasons: 3,
-                episodesPerSeason: 8,
-                genres: ['Sci-Fi', 'Thriller', 'Drama'],
-                poster: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'A family saga with a supernatural twist, set in a German town where the disappearance of two young children exposes the relationships among four families.'
-            },
-            {
-                uid: 'doc-tv-sample',
-                type: 'tv',
-                title: 'Doc Sample TV (205715 / tt13159924)',
-                year: 2023,
-                rating: 8.5,
-                imdbId: 'tt13159924',
-                tmdbId: '205715',
-                seasons: 2,
-                episodesPerSeason: 8,
-                genres: ['Action', 'Sci-Fi'],
-                poster: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=600&q=80',
-                backdrop: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1920&q=80',
-                featured: false,
-                description: 'Pre-configured with the exact TMDB ID (205715) and IMDB ID (tt13159924) from your TV Show Episode Embed documentation screenshot.'
-            }
-        ];
+        const TMDB_BASE = "https://api.themoviedb.org/3";
+        const TMDB_IMG_W500 = "https://image.tmdb.org/t/p/w500";
+        const TMDB_IMG_W300 = "https://image.tmdb.org/t/p/w300";
+        const TMDB_IMG_ORIG = "https://image.tmdb.org/t/p/original";
+        const OMDB_BASE = "https://www.omdbapi.com/";
+
+        // Official TMDB Genre ID Mapping
+        const TMDB_GENRE_MAP = {
+            28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
+            80: "Crime", 99: "Documentary", 18: "Drama", 10751: "Family",
+            14: "Fantasy", 36: "History", 27: "Horror", 10402: "Music",
+            9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 10770: "TV Movie",
+            53: "Thriller", 10752: "War", 37: "Western",
+            10759: "Action", 10762: "Kids", 10765: "Sci-Fi", 10768: "Drama"
+        };
+
+        // Genre Filter to TMDB Discover Genre IDs
+        const FILTER_TO_TMDB_GENRE = {
+            "Action": { movie: "28", tv: "10759" },
+            "Sci-Fi": { movie: "878,14", tv: "10765" },
+            "Drama": { movie: "18", tv: "18" },
+            "Thriller": { movie: "53,9648", tv: "9648" },
+            "Crime": { movie: "80", tv: "80" },
+            "Comedy": { movie: "35", tv: "35" },
+            "Horror": { movie: "27", tv: "9648" },
+            "Animation": { movie: "16", tv: "16" }
+        };
 
         /**************************************************************
-         * 2. APPLICATION STATE & STORAGE
+         * 2. APPLICATION STATE
          **************************************************************/
         let state = {
             activeTab: 'home',
             selectedGenre: 'All',
+            trendingMovies: [],
+            trendingTv: [],
+            topRatedMovies: [],
+            heroItems: [],
             heroIndex: 0,
-            heroItems: MEDIA_CATALOG.filter(m => m.featured),
-            watchlist: JSON.parse(localStorage.getItem('cinevault_watchlist') || '[]'),
-            recentlyWatched: JSON.parse(localStorage.getItem('cinevault_recent') || '[]'),
+            mediaRegistry: {}, // uid -> normalized media object
+            watchlist: JSON.parse(localStorage.getItem('cinevault_watchlist_v2') || '[]'),
+            recentlyWatched: JSON.parse(localStorage.getItem('cinevault_recent_v2') || '[]'),
             baseUrl: localStorage.getItem('cinevault_base_url') || 'https://vaplayer.ru',
-            tmdbApiKey: localStorage.getItem('cinevault_tmdb_key') || '',
-            // Player State
+            // Player Modal State
             currentMedia: null,
-            playerIdMode: 'imdb', // 'imdb' or 'tmdb'
+            playerIdMode: 'tmdb', // 'tmdb' or 'imdb'
             tvSeason: 1,
             tvEpisode: 1,
             tvUrlFormat: 'numeric', // 'numeric' | 'sxxexx' | 'dash' | 'query'
             lightsOff: false,
-            directModalType: 'movie',
-            dynamicSearchCache: {}
+            directModalType: 'movie'
         };
 
+        // Restore cached registry items for watchlist/recent
+        const savedRegistry = JSON.parse(localStorage.getItem('cinevault_registry_v2') || '{}');
+        Object.assign(state.mediaRegistry, savedRegistry);
+
         /**************************************************************
-         * 3. INITIALIZATION & HERO ROTATION
+         * 3. INITIALIZATION & SKELETON LOADERS
          **************************************************************/
         window.addEventListener('DOMContentLoaded', () => {
-            renderCatalog();
-            renderRecentlyWatched();
+            renderSkeletonGrids();
             updateWatchlistBadge();
-            setupHeroCarousel();
-        });
+            renderRecentlyWatched();
+            loadInitialTmdbCatalog(false);
 
-        function setupHeroCarousel() {
-            const indicatorsContainer = document.getElementById('hero-indicators');
-            indicatorsContainer.innerHTML = state.heroItems.map((item, idx) => `
-                <button onclick="setHeroSlide(${idx})" class="h-2 rounded-full transition-all ${idx === state.heroIndex ? 'w-8 bg-brand-500' : 'w-2 bg-white/40 hover:bg-white'}"></button>
-            `).join('');
-            updateHeroBanner();
-
+            // Auto-advance hero banner every 8 seconds
             setInterval(() => {
-                if (state.activeTab === 'home') {
-                    state.heroIndex = (state.heroIndex + 1) % state.heroItems.length;
-                    updateHeroBanner();
+                if (state.activeTab === 'home' && state.heroItems.length > 1) {
+                    prevNextHero(1);
                 }
             }, 8000);
+        });
+
+        function renderSkeletonGrids() {
+            const skeletonCard = `
+                <div class="rounded-2xl bg-dark-900 border border-white/5 overflow-hidden">
+                    <div class="aspect-[2/3] w-full skeleton"></div>
+                    <div class="p-3 space-y-2">
+                        <div class="h-4 w-3/4 rounded skeleton"></div>
+                        <div class="h-3 w-1/2 rounded skeleton"></div>
+                    </div>
+                </div>
+            `;
+            const skeletonHTML = Array(10).fill(skeletonCard).join('');
+            document.getElementById('movies-grid').innerHTML = skeletonHTML;
+            document.getElementById('tv-grid').innerHTML = skeletonHTML;
+            document.getElementById('top-rated-grid').innerHTML = skeletonHTML;
         }
 
-        function setHeroSlide(index) {
-            state.heroIndex = index;
-            updateHeroBanner();
+        function getPosterFallback(title) {
+            return `https://placehold.co/500x750/151b26/e11d48?text=${encodeURIComponent(title || 'CineVault')}`;
         }
 
-        function updateHeroBanner() {
+        function getBackdropFallback(title) {
+            return `https://placehold.co/1280x720/0c1017/e11d48?text=${encodeURIComponent(title || 'CineVault')}`;
+        }
+
+        /**************************************************************
+         * 4. NORMALIZE TMDB DATA & FETCH LIVE CATALOG
+         **************************************************************/
+        function normalizeTmdbItem(raw, forcedType = null) {
+            const type = forcedType || raw.media_type || (raw.first_air_date || raw.name ? 'tv' : 'movie');
+            const tmdbId = String(raw.id);
+            const uid = `${type}-${tmdbId}`;
+            const title = raw.title || raw.name || 'Untitled';
+            const dateStr = raw.release_date || raw.first_air_date || '';
+            const year = dateStr ? dateStr.substring(0, 4) : '';
+            const rating = raw.vote_average ? Number(raw.vote_average).toFixed(1) : '7.8';
+
+            const genres = (raw.genre_ids || [])
+                .map(id => TMDB_GENRE_MAP[id])
+                .filter(Boolean)
+                .slice(0, 3);
+
+            const poster = raw.poster_path
+                ? `${TMDB_IMG_W500}${raw.poster_path}`
+                : getPosterFallback(title);
+
+            const backdrop = raw.backdrop_path
+                ? `${TMDB_IMG_ORIG}${raw.backdrop_path}`
+                : poster;
+
+            const existing = state.mediaRegistry[uid] || {};
+
+            const item = {
+                uid,
+                type,
+                title,
+                year,
+                rating,
+                tmdbId,
+                imdbId: raw.imdb_id || existing.imdbId || '',
+                genres: genres.length ? genres : (existing.genres || [type === 'tv' ? 'TV Series' : 'Movie']),
+                poster,
+                backdrop,
+                description: raw.overview || existing.description || 'Stream in HD on CineVault.',
+                seasons: existing.seasons || 1
+            };
+
+            state.mediaRegistry[uid] = item;
+            return item;
+        }
+
+        async function loadInitialTmdbCatalog(showNotification = false) {
+            try {
+                const [moviesRes, tvRes, topRes] = await Promise.all([
+                    fetch(`${TMDB_BASE}/trending/movie/week?api_key=${TMDB_API_KEY}`),
+                    fetch(`${TMDB_BASE}/trending/tv/week?api_key=${TMDB_API_KEY}`),
+                    fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_API_KEY}&page=1`)
+                ]);
+
+                const [moviesData, tvData, topData] = await Promise.all([
+                    moviesRes.json(),
+                    tvRes.json(),
+                    topRes.json()
+                ]);
+
+                state.trendingMovies = (moviesData.results || []).map(m => normalizeTmdbItem(m, 'movie'));
+                state.trendingTv = (tvData.results || []).map(t => normalizeTmdbItem(t, 'tv'));
+                state.topRatedMovies = (topData.results || []).map(m => normalizeTmdbItem(m, 'movie'));
+
+                // Build Hero Carousel from top trending movies & TV shows with high-res backdrops
+                state.heroItems = [
+                    ...state.trendingMovies.slice(0, 4),
+                    ...state.trendingTv.slice(0, 3)
+                ].filter(item => item.backdrop);
+
+                state.heroIndex = 0;
+                setupHeroCarousel();
+                renderCatalogGrids(state.trendingMovies, state.trendingTv, state.topRatedMovies);
+
+                // Pre-resolve IMDB IDs for hero items in background
+                state.heroItems.forEach(item => ensureImdbId(item));
+
+                if (showNotification) {
+                    showToast('Refreshed live TMDB & OMDb catalog!');
+                }
+            } catch (error) {
+                console.error('Error loading TMDB catalog:', error);
+                showToast('Error connecting to TMDB API. Please check your connection.');
+            }
+        }
+
+        // Resolve exact IMDB ID (`tt...`) from TMDB `/external_ids`
+        async function ensureImdbId(item) {
+            if (!item || item.imdbId || !item.tmdbId) return item ? item.imdbId : '';
+            try {
+                const res = await fetch(`${TMDB_BASE}/${item.type}/${item.tmdbId}/external_ids?api_key=${TMDB_API_KEY}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.imdb_id) {
+                        item.imdbId = data.imdb_id;
+                        state.mediaRegistry[item.uid] = item;
+                        // If this item is currently shown on the hero banner, refresh its meta badge
+                        const currentHero = state.heroItems[state.heroIndex];
+                        if (currentHero && currentHero.uid === item.uid) {
+                            updateHeroBannerUI();
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not resolve external_ids:', e);
+            }
+            return item.imdbId;
+        }
+
+        /**************************************************************
+         * 5. HERO BANNER CAROUSEL
+         **************************************************************/
+        function setupHeroCarousel() {
+            const indicators = document.getElementById('hero-indicators');
+            if (!state.heroItems.length) return;
+
+            indicators.innerHTML = state.heroItems.map((_, idx) => `
+                <button onclick="setHeroSlide(${idx})" aria-label="Slide ${idx + 1}" class="h-1.5 sm:h-2 rounded-full transition-all ${idx === state.heroIndex ? 'w-6 sm:w-8 bg-brand-500' : 'w-2 bg-white/40 hover:bg-white'}"></button>
+            `).join('');
+
+            updateHeroBannerUI();
+        }
+
+        function setHeroSlide(idx) {
+            state.heroIndex = idx;
+            updateHeroBannerUI();
+        }
+
+        function prevNextHero(delta) {
+            if (!state.heroItems.length) return;
+            state.heroIndex = (state.heroIndex + delta + state.heroItems.length) % state.heroItems.length;
+            updateHeroBannerUI();
+        }
+
+        function updateHeroBannerUI() {
             const item = state.heroItems[state.heroIndex];
             if (!item) return;
 
             document.getElementById('hero-backdrop').style.backgroundImage = `url('${item.backdrop}')`;
-            document.getElementById('hero-badge').textContent = item.type === 'tv' ? 'Featured TV Series' : 'Featured Movie';
+            document.getElementById('hero-badge').textContent = item.type === 'tv' ? 'Trending TV Series' : 'Trending Movie';
             document.getElementById('hero-rating').innerHTML = `<i class="fa-solid fa-star"></i> ${item.rating}`;
-            document.getElementById('hero-meta').textContent = `${item.year} • ${item.genres.join(' / ')} • IMDB: ${item.imdbId}`;
+
+            const idLabel = item.imdbId ? `IMDB: ${item.imdbId}` : `TMDB: ${item.tmdbId}`;
+            document.getElementById('hero-meta').textContent = [
+                item.year,
+                item.genres.join(' / '),
+                idLabel
+            ].filter(Boolean).join(' • ');
+
             document.getElementById('hero-title').textContent = item.title;
             document.getElementById('hero-desc').textContent = item.description;
 
-            const playBtn = document.getElementById('hero-play-btn');
-            playBtn.setAttribute('onclick', `playMediaById('${item.uid}')`);
-
             const inWatchlist = state.watchlist.includes(item.uid);
             const wlBtn = document.getElementById('hero-watchlist-btn');
-            wlBtn.setAttribute('onclick', `toggleWatchlist('${item.uid}')`);
             wlBtn.innerHTML = inWatchlist
                 ? `<i class="fa-solid fa-check text-emerald-400"></i> In Watchlist`
-                : `<i class="fa-solid fa-plus"></i> Add to Watchlist`;
+                : `<i class="fa-solid fa-plus"></i> Watchlist`;
 
-            const indicatorsContainer = document.getElementById('hero-indicators');
-            if (indicatorsContainer) {
-                indicatorsContainer.innerHTML = state.heroItems.map((_, idx) => `
-                    <button onclick="setHeroSlide(${idx})" class="h-2 rounded-full transition-all ${idx === state.heroIndex ? 'w-8 bg-brand-500' : 'w-2 bg-white/40 hover:bg-white'}"></button>
+            const indicators = document.getElementById('hero-indicators');
+            if (indicators) {
+                indicators.innerHTML = state.heroItems.map((_, idx) => `
+                    <button onclick="setHeroSlide(${idx})" class="h-1.5 sm:h-2 rounded-full transition-all ${idx === state.heroIndex ? 'w-6 sm:w-8 bg-brand-500' : 'w-2 bg-white/40 hover:bg-white'}"></button>
                 `).join('');
             }
         }
 
+        function playHeroCurrent() {
+            const item = state.heroItems[state.heroIndex];
+            if (item) playMediaByUid(item.uid);
+        }
+
+        function toggleHeroWatchlist() {
+            const item = state.heroItems[state.heroIndex];
+            if (item) toggleWatchlist(item.uid);
+        }
+
         /**************************************************************
-         * 4. RENDERING CARDS & GRIDS
+         * 6. RENDERING CARDS & CATALOG GRIDS
          **************************************************************/
         function createMediaCardHTML(item) {
             const inWatchlist = state.watchlist.includes(item.uid);
             const typeBadge = item.type === 'tv'
-                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-500 text-black shadow">TV Series</span>`
+                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-500 text-black shadow">TV</span>`
                 : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-brand-500 text-white shadow">Movie</span>`;
 
-            const displayId = item.imdbId ? item.imdbId : `TMDB: ${item.tmdbId}`;
+            const displayId = item.imdbId ? item.imdbId : `TMDB ${item.tmdbId}`;
+            const safeTitle = (item.title || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 
             return `
                 <div class="group relative rounded-2xl bg-dark-900 border border-white/10 overflow-hidden card-hover flex flex-col">
-                    <!-- Poster Wrapper -->
-                    <div onclick="playMediaById('${item.uid}')" class="relative aspect-[2/3] w-full bg-dark-800 overflow-hidden cursor-pointer">
+                    <!-- Poster Container -->
+                    <div onclick="playMediaByUid('${item.uid}')" class="relative aspect-[2/3] w-full bg-dark-800 overflow-hidden cursor-pointer">
                         <img
                             src="${item.poster}"
-                            alt="${item.title}"
+                            alt="${safeTitle}"
                             loading="lazy"
-                            onerror="this.src='https://placehold.co/400x600/151b26/e11d48?text=${encodeURIComponent(item.title)}'"
-                            class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                            onerror="this.onerror=null;this.src='${getPosterFallback(item.title)}';"
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                         >
                         <div class="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-black/30 opacity-90"></div>
 
                         <!-- Top Badges -->
-                        <div class="absolute top-3 left-3 right-3 flex items-center justify-between gap-1">
+                        <div class="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1">
                             ${typeBadge}
-                            <span class="px-2 py-0.5 rounded-md text-xs font-bold bg-black/75 backdrop-blur-md text-amber-400 flex items-center gap-1 border border-white/10">
-                                <i class="fa-solid fa-star text-[10px]"></i> ${item.rating || '8.0'}
+                            <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-black/75 backdrop-blur-md text-amber-400 flex items-center gap-1 border border-white/10">
+                                <i class="fa-solid fa-star text-[9px]"></i> ${item.rating || '7.8'}
                             </span>
                         </div>
 
-                        <!-- Center Play Button Overlay on Hover -->
-                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 bg-black/40 backdrop-blur-[2px]">
-                            <div class="w-14 h-14 rounded-full bg-brand-500 text-white flex items-center justify-center shadow-xl shadow-brand-500/50 transform scale-75 group-hover:scale-100 transition">
-                                <i class="fa-solid fa-play text-xl ml-1"></i>
+                        <!-- Hover Play Overlay -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300 bg-black/45 backdrop-blur-[2px]">
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-brand-500 text-white flex items-center justify-center shadow-xl shadow-brand-500/50 transform scale-75 group-hover:scale-100 transition">
+                                <i class="fa-solid fa-play text-lg ml-0.5"></i>
                             </div>
                         </div>
 
-                        <!-- Bottom ID Tag -->
-                        <div class="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-[11px] text-gray-300">
-                            <span class="font-mono bg-black/60 px-2 py-0.5 rounded border border-white/10">${displayId}</span>
-                            <span class="font-medium">${item.year || ''}</span>
+                        <!-- Bottom ID & Year -->
+                        <div class="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px] sm:text-[11px] text-gray-200">
+                            <span class="font-mono bg-black/70 px-1.5 py-0.5 rounded border border-white/10 truncate max-w-[70%]">${displayId}</span>
+                            <span class="font-semibold">${item.year || ''}</span>
                         </div>
                     </div>
 
-                    <!-- Card Details -->
-                    <div class="p-3.5 flex-1 flex flex-col justify-between bg-dark-900">
+                    <!-- Card Body -->
+                    <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between bg-dark-900">
                         <div>
-                            <h3 onclick="playMediaById('${item.uid}')" class="font-display font-bold text-sm sm:text-base text-white group-hover:text-brand-500 transition line-clamp-1 cursor-pointer">
+                            <h3 onclick="playMediaByUid('${item.uid}')" class="font-display font-bold text-xs sm:text-sm text-white group-hover:text-brand-400 transition line-clamp-1 cursor-pointer" title="${safeTitle}">
                                 ${item.title}
                             </h3>
-                            <p class="text-xs text-gray-400 mt-1 line-clamp-1">
-                                ${(item.genres && item.genres.length) ? item.genres.join(' • ') : 'Stream Ready'}
+                            <p class="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
+                                ${(item.genres && item.genres.length) ? item.genres.join(' • ') : (item.type === 'tv' ? 'TV Series' : 'Movie')}
                             </p>
                         </div>
 
-                        <div class="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between">
-                            <button onclick="playMediaById('${item.uid}')" class="text-xs font-semibold text-brand-500 hover:text-rose-400 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-play"></i> Watch Now
+                        <div class="mt-2.5 pt-2 border-t border-white/5 flex items-center justify-between">
+                            <button onclick="playMediaByUid('${item.uid}')" class="text-xs font-semibold text-brand-500 hover:text-rose-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-play"></i> Watch
                             </button>
                             <button
                                 onclick="toggleWatchlist('${item.uid}')"
-                                title="${inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}"
+                                aria-label="Toggle Watchlist"
                                 class="w-7 h-7 rounded-lg ${inWatchlist ? 'bg-brand-500/20 text-brand-400' : 'bg-white/5 text-gray-400 hover:text-white'} flex items-center justify-center transition"
                             >
                                 <i class="fa-${inWatchlist ? 'solid' : 'regular'} fa-bookmark text-xs"></i>
@@ -1077,182 +1085,75 @@
             `;
         }
 
-        function renderCatalog() {
-            const genre = state.selectedGenre;
-            const filtered = MEDIA_CATALOG.filter(item => {
-                if (genre === 'All') return true;
-                return item.genres && item.genres.includes(genre);
-            });
-
-            const movies = filtered.filter(m => m.type === 'movie');
-            const tvShows = filtered.filter(m => m.type === 'tv');
-
+        function renderCatalogGrids(moviesList, tvList, topRatedList = state.topRatedMovies) {
             const moviesGrid = document.getElementById('movies-grid');
             const tvGrid = document.getElementById('tv-grid');
+            const topGrid = document.getElementById('top-rated-grid');
 
-            moviesGrid.innerHTML = movies.length
-                ? movies.map(createMediaCardHTML).join('')
-                : `<p class="text-gray-400 text-sm col-span-full py-6">No movies match this genre filter.</p>`;
+            moviesGrid.innerHTML = moviesList.length
+                ? moviesList.map(createMediaCardHTML).join('')
+                : `<p class="text-gray-400 text-sm col-span-full py-6">No movies found for this genre.</p>`;
 
-            tvGrid.innerHTML = tvShows.length
-                ? tvShows.map(createMediaCardHTML).join('')
-                : `<p class="text-gray-400 text-sm col-span-full py-6">No TV series match this genre filter.</p>`;
-        }
+            tvGrid.innerHTML = tvList.length
+                ? tvList.map(createMediaCardHTML).join('')
+                : `<p class="text-gray-400 text-sm col-span-full py-6">No TV series found for this genre.</p>`;
 
-        function renderRecentlyWatched() {
-            const section = document.getElementById('recently-watched-section');
-            const grid = document.getElementById('recently-watched-grid');
-
-            if (!state.recentlyWatched.length || state.activeTab !== 'home') {
-                section.classList.add('hidden');
-                return;
+            if (topGrid && topRatedList) {
+                topGrid.innerHTML = topRatedList.length
+                    ? topRatedList.map(createMediaCardHTML).join('')
+                    : '';
             }
-
-            section.classList.remove('hidden');
-            grid.innerHTML = state.recentlyWatched.slice(0, 6).map(item => `
-                <div onclick="playFromRecent('${item.uid}')" class="group cursor-pointer bg-dark-900 border border-white/10 hover:border-brand-500/50 rounded-xl p-2.5 flex items-center gap-3 transition">
-                    <img src="${item.poster}" alt="${item.title}" onerror="this.src='https://placehold.co/100x150/151b26/e11d48?text=Play'" class="w-12 h-16 object-cover rounded-lg shrink-0">
-                    <div class="overflow-hidden">
-                        <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${item.type === 'tv' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-500/20 text-brand-400'}">
-                            ${item.type === 'tv' ? `S${item.season || 1}:E${item.episode || 1}` : 'Movie'}
-                        </span>
-                        <h4 class="text-xs font-bold text-white truncate mt-1 group-hover:text-brand-400 transition">${item.title}</h4>
-                        <p class="text-[11px] text-gray-400 font-mono truncate">${item.imdbId || item.tmdbId}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function clearRecentlyWatched() {
-            state.recentlyWatched = [];
-            localStorage.removeItem('cinevault_recent');
-            renderRecentlyWatched();
-            showToast('Watch history cleared');
         }
 
         /**************************************************************
-         * 5. NAVIGATION & FILTERING
+         * 7. LIVE TMDB GENRE DISCOVERY FILTERING
          **************************************************************/
-        function switchTab(tab) {
-            state.activeTab = tab;
-            clearSearch(false);
-
-            // Update desktop nav buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-white/10', 'text-white');
-                btn.classList.add('text-gray-300');
-            });
-            const activeBtn = document.getElementById(`nav-${tab}`);
-            if (activeBtn) {
-                activeBtn.classList.add('bg-white/10', 'text-white');
-                activeBtn.classList.remove('text-gray-300');
-            }
-
-            const heroSection = document.getElementById('hero-section');
-            const catalogContainer = document.getElementById('catalog-container');
-            const moviesSection = document.getElementById('movies-section');
-            const tvSection = document.getElementById('tv-section');
-            const watchlistSection = document.getElementById('watchlist-section');
-
-            if (tab === 'home') {
-                heroSection.classList.remove('hidden');
-                catalogContainer.classList.remove('hidden');
-                moviesSection.classList.remove('hidden');
-                tvSection.classList.remove('hidden');
-                watchlistSection.classList.add('hidden');
-                renderRecentlyWatched();
-            } else if (tab === 'movies') {
-                heroSection.classList.add('hidden');
-                catalogContainer.classList.remove('hidden');
-                moviesSection.classList.remove('hidden');
-                tvSection.classList.add('hidden');
-                watchlistSection.classList.add('hidden');
-                document.getElementById('recently-watched-section').classList.add('hidden');
-            } else if (tab === 'tv') {
-                heroSection.classList.add('hidden');
-                catalogContainer.classList.remove('hidden');
-                moviesSection.classList.add('hidden');
-                tvSection.classList.remove('hidden');
-                watchlistSection.classList.add('hidden');
-                document.getElementById('recently-watched-section').classList.add('hidden');
-            } else if (tab === 'watchlist') {
-                heroSection.classList.add('hidden');
-                catalogContainer.classList.add('hidden');
-                watchlistSection.classList.remove('hidden');
-                document.getElementById('recently-watched-section').classList.add('hidden');
-                renderWatchlist();
-            }
-        }
-
-        function filterByGenre(genre) {
+        async function filterByGenre(genre) {
             state.selectedGenre = genre;
+
             document.querySelectorAll('.genre-pill').forEach(btn => {
                 if (btn.dataset.genre === genre) {
-                    btn.className = 'genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-500 text-white shadow-md shrink-0 transition';
+                    btn.className = 'genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-brand-500 text-white shadow-md shrink-0 transition';
                 } else {
-                    btn.className = 'genre-pill px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition';
+                    btn.className = 'genre-pill px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 shrink-0 transition';
                 }
             });
-            renderCatalog();
-        }
 
-        /**************************************************************
-         * 6. WATCHLIST MANAGEMENT
-         **************************************************************/
-        function toggleWatchlist(uid) {
-            const idx = state.watchlist.indexOf(uid);
-            if (idx > -1) {
-                state.watchlist.splice(idx, 1);
-                showToast('Removed from Watchlist');
-            } else {
-                state.watchlist.push(uid);
-                showToast('Added to Watchlist');
-            }
-            localStorage.setItem('cinevault_watchlist', JSON.stringify(state.watchlist));
-            updateWatchlistBadge();
-            renderCatalog();
-            updateHeroBanner();
-            if (state.activeTab === 'watchlist') renderWatchlist();
-        }
-
-        function updateWatchlistBadge() {
-            const badge = document.getElementById('watchlist-badge');
-            if (state.watchlist.length > 0) {
-                badge.textContent = state.watchlist.length;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        function renderWatchlist() {
-            const grid = document.getElementById('watchlist-grid');
-            const items = state.watchlist
-                .map(uid => MEDIA_CATALOG.find(m => m.uid === uid) || state.dynamicSearchCache[uid])
-                .filter(Boolean);
-
-            if (!items.length) {
-                grid.innerHTML = `
-                    <div class="col-span-full py-16 text-center bg-dark-900/60 rounded-2xl border border-white/10">
-                        <i class="fa-regular fa-bookmark text-4xl text-gray-500 mb-3"></i>
-                        <h3 class="font-display font-bold text-lg text-white">Your Watchlist is Empty</h3>
-                        <p class="text-xs text-gray-400 mt-1">Click the bookmark icon on any movie or TV series to save it for later.</p>
-                    </div>
-                `;
+            if (genre === 'All') {
+                document.getElementById('movies-section-title').innerHTML = `<span class="w-1.5 h-6 rounded-full bg-brand-500 inline-block"></span> Trending Movies This Week`;
+                document.getElementById('tv-section-title').innerHTML = `<span class="w-1.5 h-6 rounded-full bg-amber-500 inline-block"></span> Trending TV Series This Week`;
+                renderCatalogGrids(state.trendingMovies, state.trendingTv, state.topRatedMovies);
                 return;
             }
-            grid.innerHTML = items.map(createMediaCardHTML).join('');
+
+            const genreMap = FILTER_TO_TMDB_GENRE[genre];
+            if (!genreMap) return;
+
+            document.getElementById('movies-section-title').innerHTML = `<span class="w-1.5 h-6 rounded-full bg-brand-500 inline-block"></span> Popular ${genre} Movies`;
+            document.getElementById('tv-section-title').innerHTML = `<span class="w-1.5 h-6 rounded-full bg-amber-500 inline-block"></span> Popular ${genre} TV Series`;
+
+            try {
+                const [mRes, tRes] = await Promise.all([
+                    fetch(`${TMDB_BASE}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreMap.movie}&sort_by=popularity.desc`),
+                    fetch(`${TMDB_BASE}/discover/tv?api_key=${TMDB_API_KEY}&with_genres=${genreMap.tv}&sort_by=popularity.desc`)
+                ]);
+                const [mData, tData] = await Promise.all([mRes.json(), tRes.json()]);
+                const discoveredMovies = (mData.results || []).map(m => normalizeTmdbItem(m, 'movie'));
+                const discoveredTv = (tData.results || []).map(t => normalizeTmdbItem(t, 'tv'));
+                renderCatalogGrids(discoveredMovies, discoveredTv, state.topRatedMovies);
+            } catch (e) {
+                console.warn('Genre discover failed:', e);
+            }
         }
 
         /**************************************************************
-         * 7. LIVE SEARCH (CATALOG + TVMAZE PUBLIC API + OPTIONAL TMDB)
+         * 8. LIVE SEARCH (TMDB MULTI-SEARCH + OMDB SEARCH + IMDB ID FIND)
          **************************************************************/
-        let searchDebounceTimer = null;
+        let searchDebounce = null;
 
-        function handleSearchInput(query) {
+        function handleSearchInput(val) {
             const clearBtn = document.getElementById('clear-search-btn');
-            const trimmed = query.trim();
-
+            const trimmed = val.trim();
             if (!trimmed) {
                 clearBtn.classList.add('hidden');
                 clearSearch(false);
@@ -1260,53 +1161,45 @@
             }
             clearBtn.classList.remove('hidden');
 
-            clearTimeout(searchDebounceTimer);
-            searchDebounceTimer = setTimeout(() => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => {
                 executeLiveSearch(trimmed);
-            }, 350);
+            }, 380);
         }
 
         async function executeLiveSearch(query) {
-            const trimmed = query.trim();
+            const trimmed = (query || '').trim();
             if (!trimmed) return;
 
             document.getElementById('hero-section').classList.add('hidden');
             document.getElementById('catalog-container').classList.add('hidden');
             document.getElementById('watchlist-section').classList.add('hidden');
+            document.getElementById('recently-watched-section').classList.add('hidden');
             document.getElementById('search-results-section').classList.remove('hidden');
 
             const heading = document.getElementById('search-heading');
             const subheading = document.getElementById('search-subheading');
             const grid = document.getElementById('search-results-grid');
 
-            heading.textContent = `Search Results for "${trimmed}"`;
-            subheading.textContent = 'Searching local catalog and live online databases...';
+            heading.textContent = `Results for "${trimmed}"`;
+            subheading.textContent = 'Searching TMDB & OMDb live databases...';
 
-            // 1. Check if the user pasted an IMDB ID (tt...) or numeric TMDB ID directly
             const isImdbId = /^tt\d{5,}$/i.test(trimmed);
             const isNumericId = /^\d{2,}$/.test(trimmed);
 
-            let localMatches = MEDIA_CATALOG.filter(item =>
-                item.title.toLowerCase().includes(trimmed.toLowerCase()) ||
-                (item.imdbId && item.imdbId.toLowerCase() === trimmed.toLowerCase()) ||
-                (item.tmdbId && item.tmdbId === trimmed)
-            );
-
-            // Render local matches + direct ID card immediately
-            let directPlayBanner = '';
+            let directBannerHTML = '';
             if (isImdbId || isNumericId) {
-                directPlayBanner = `
-                    <div class="col-span-full bg-gradient-to-r from-brand-600/20 to-rose-600/10 border border-brand-500/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+                directBannerHTML = `
+                    <div class="col-span-full bg-gradient-to-r from-brand-600/20 to-rose-600/10 border border-brand-500/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <span class="text-xs font-bold uppercase text-brand-400">Direct ID Detected (${trimmed})</span>
-                            <h4 class="font-display font-bold text-white text-base mt-0.5">Stream ID "${trimmed}" directly on vaplayer.ru</h4>
-                            <p class="text-xs text-gray-300">Choose whether this ID is a Movie or a TV Show episode:</p>
+                            <span class="text-[11px] font-bold uppercase text-brand-400">Direct ID Detected (${trimmed})</span>
+                            <h4 class="font-display font-bold text-white text-sm sm:text-base mt-0.5">Stream ID "${trimmed}" immediately on vaplayer.ru</h4>
                         </div>
-                        <div class="flex items-center gap-2.5">
-                            <button onclick="quickLaunchById('${trimmed}', 'movie')" class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold flex items-center gap-1.5">
+                        <div class="flex items-center gap-2">
+                            <button onclick="quickLaunchById('${trimmed}', 'movie')" class="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold flex items-center gap-1.5">
                                 <i class="fa-solid fa-film"></i> Play as Movie
                             </button>
-                            <button onclick="quickLaunchById('${trimmed}', 'tv')" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold flex items-center gap-1.5">
+                            <button onclick="quickLaunchById('${trimmed}', 'tv')" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold flex items-center gap-1.5">
                                 <i class="fa-solid fa-tv"></i> Play as TV Show
                             </button>
                         </div>
@@ -1314,198 +1207,359 @@
                 `;
             }
 
-            grid.innerHTML = directPlayBanner + localMatches.map(createMediaCardHTML).join('');
-
-            // 2. Query Public TVMaze API for TV Series with real IMDB IDs
             try {
-                const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(trimmed)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const externalShows = [];
+                let resultsList = [];
 
-                    data.forEach(entry => {
-                        const show = entry.show;
-                        const imdbId = show.externals && show.externals.imdb ? show.externals.imdb : null;
-                        if (!imdbId) return; // Only include shows that have an IMDB ID for vaplayer.ru
-
-                        // Avoid duplicating items already in localMatches
-                        if (localMatches.some(m => m.imdbId === imdbId)) return;
-
-                        const uid = `tvmaze-${show.id}`;
-                        const itemObj = {
-                            uid,
-                            type: 'tv',
-                            title: show.name,
-                            year: show.premiered ? show.premiered.substring(0, 4) : 'TV',
-                            rating: show.rating && show.rating.average ? show.rating.average : '8.0',
-                            imdbId: imdbId,
-                            tmdbId: '',
-                            seasons: 5,
-                            episodesPerSeason: 12,
-                            genres: show.genres && show.genres.length ? show.genres.slice(0, 3) : ['TV Series'],
-                            poster: show.image ? (show.image.original || show.image.medium) : `https://placehold.co/400x600/151b26/e11d48?text=${encodeURIComponent(show.name)}`,
-                            backdrop: show.image ? (show.image.original || show.image.medium) : '',
-                            description: show.summary ? show.summary.replace(/<[^>]+>/g, '') : 'Stream episodes via vaplayer.ru'
-                        };
-                        state.dynamicSearchCache[uid] = itemObj;
-                        externalShows.push(itemObj);
-                    });
-
-                    // 3. Optional: If user configured a TMDB v3 API key, also query TMDB multi-search
-                    let tmdbResults = [];
-                    if (state.tmdbApiKey) {
-                        try {
-                            const tmdbRes = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(state.tmdbApiKey)}&query=${encodeURIComponent(trimmed)}`);
-                            if (tmdbRes.ok) {
-                                const tmdbData = await tmdbRes.json();
-                                (tmdbData.results || []).slice(0, 10).forEach(r => {
-                                    if (r.media_type !== 'movie' && r.media_type !== 'tv') return;
-                                    const uid = `tmdb-${r.media_type}-${r.id}`;
-                                    const obj = {
-                                        uid,
-                                        type: r.media_type,
-                                        title: r.title || r.name,
-                                        year: (r.release_date || r.first_air_date || '').substring(0, 4),
-                                        rating: r.vote_average ? r.vote_average.toFixed(1) : '7.8',
-                                        imdbId: '',
-                                        tmdbId: String(r.id),
-                                        seasons: 4,
-                                        episodesPerSeason: 10,
-                                        genres: [r.media_type === 'movie' ? 'Movie' : 'TV Series'],
-                                        poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : `https://placehold.co/400x600/151b26/e11d48?text=${encodeURIComponent(r.title || r.name)}`,
-                                        description: r.overview || ''
-                                    };
-                                    state.dynamicSearchCache[uid] = obj;
-                                    tmdbResults.push(obj);
-                                });
-                            }
-                        } catch (err) {
-                            console.warn('TMDB search error:', err);
-                        }
-                    }
-
-                    const combined = [...localMatches, ...tmdbResults, ...externalShows];
-                    subheading.textContent = `Found ${combined.length} streamable titles matching "${trimmed}"`;
-
-                    if (combined.length === 0 && !directPlayBanner) {
-                        grid.innerHTML = `
-                            <div class="col-span-full py-12 text-center bg-dark-900/70 rounded-2xl border border-white/10 p-6">
-                                <i class="fa-solid fa-wand-magic-sparkles text-3xl text-brand-500 mb-3"></i>
-                                <h3 class="font-display font-bold text-lg text-white">Want to stream "${trimmed}" by ID?</h3>
-                                <p class="text-xs text-gray-400 max-w-md mx-auto mt-1">
-                                    You can paste any IMDB ID (e.g. <code class="text-gray-200">tt23779058</code>) or TMDB ID (e.g. <code class="text-gray-200">1147301</code>) in the Direct ID Player to stream it immediately.
-                                </p>
-                                <button onclick="openDirectPlayModal()" class="mt-4 px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs font-semibold text-white">
-                                    Open Direct ID Player
-                                </button>
-                            </div>
-                        `;
-                    } else {
-                        grid.innerHTML = directPlayBanner + combined.map(createMediaCardHTML).join('');
+                // If user searched an exact IMDB ID (tt...), resolve it via TMDB /find/{imdb_id} and OMDb
+                if (isImdbId) {
+                    const findRes = await fetch(`${TMDB_BASE}/find/${encodeURIComponent(trimmed)}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
+                    if (findRes.ok) {
+                        const findData = await findRes.json();
+                        const movies = (findData.movie_results || []).map(m => {
+                            m.imdb_id = trimmed;
+                            return normalizeTmdbItem(m, 'movie');
+                        });
+                        const shows = (findData.tv_results || []).map(t => {
+                            t.imdb_id = trimmed;
+                            return normalizeTmdbItem(t, 'tv');
+                        });
+                        resultsList.push(...movies, ...shows);
                     }
                 }
-            } catch (e) {
-                console.warn('Live search error:', e);
+
+                // Parallel query to TMDB /search/multi and OMDb ?s=
+                const [tmdbRes, omdbRes] = await Promise.all([
+                    fetch(`${TMDB_BASE}/search/multi?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(trimmed)}&include_adult=false`),
+                    fetch(`${OMDB_BASE}?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(trimmed)}`)
+                ]);
+
+                if (tmdbRes.ok) {
+                    const tmdbData = await tmdbRes.json();
+                    const tmdbItems = (tmdbData.results || [])
+                        .filter(r => r.media_type === 'movie' || r.media_type === 'tv')
+                        .map(r => normalizeTmdbItem(r));
+                    resultsList.push(...tmdbItems);
+                }
+
+                // Supplement with OMDb search results that have real IMDb IDs & posters
+                if (omdbRes.ok) {
+                    const omdbData = await omdbRes.json();
+                    if (omdbData.Search && Array.isArray(omdbData.Search)) {
+                        omdbData.Search.forEach(omdbItem => {
+                            if (omdbItem.Type !== 'movie' && omdbItem.Type !== 'series') return;
+                            const type = omdbItem.Type === 'series' ? 'tv' : 'movie';
+                            // Avoid duplicates by title + year
+                            const alreadyExists = resultsList.some(
+                                existing => existing.title.toLowerCase() === omdbItem.Title.toLowerCase()
+                            );
+                            if (!alreadyExists) {
+                                const uid = `omdb-${omdbItem.imdbID}`;
+                                const normalized = {
+                                    uid,
+                                    type,
+                                    title: omdbItem.Title,
+                                    year: (omdbItem.Year || '').substring(0, 4),
+                                    rating: 'IMDb',
+                                    tmdbId: '',
+                                    imdbId: omdbItem.imdbID,
+                                    genres: [type === 'tv' ? 'TV Series' : 'Movie'],
+                                    poster: (omdbItem.Poster && omdbItem.Poster !== 'N/A') ? omdbItem.Poster : getPosterFallback(omdbItem.Title),
+                                    backdrop: (omdbItem.Poster && omdbItem.Poster !== 'N/A') ? omdbItem.Poster : getBackdropFallback(omdbItem.Title),
+                                    description: `Stream ${omdbItem.Title} (${omdbItem.Year}) via IMDb ID ${omdbItem.imdbID}.`
+                                };
+                                state.mediaRegistry[uid] = normalized;
+                                resultsList.push(normalized);
+                            }
+                        });
+                    }
+                }
+
+                subheading.textContent = `Found ${resultsList.length} real titles from TMDB & OMDb`;
+
+                if (!resultsList.length && !directBannerHTML) {
+                    grid.innerHTML = `
+                        <div class="col-span-full py-12 text-center bg-dark-900/70 rounded-2xl border border-white/10 p-6">
+                            <i class="fa-solid fa-film text-3xl text-brand-500 mb-3"></i>
+                            <h3 class="font-display font-bold text-base sm:text-lg text-white">No exact matches for "${trimmed}"</h3>
+                            <p class="text-xs text-gray-400 max-w-md mx-auto mt-1">
+                                Have an IMDB ID (<code class="text-gray-200">tt...</code>) or TMDB ID? Launch it directly in the player!
+                            </p>
+                            <button onclick="openDirectPlayModal()" class="mt-4 px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs font-semibold text-white">
+                                Open Direct ID Streamer
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML = directBannerHTML + resultsList.map(createMediaCardHTML).join('');
+                }
+            } catch (err) {
+                console.error('Live search error:', err);
+                subheading.textContent = 'Search completed.';
             }
         }
 
-        function clearSearch(restoreView = true) {
+        function clearSearch(restoreTab = true) {
             const input = document.getElementById('search-input');
             input.value = '';
             document.getElementById('clear-search-btn').classList.add('hidden');
             document.getElementById('search-results-section').classList.add('hidden');
-
-            if (restoreView) {
-                switchTab(state.activeTab);
-            }
-        }
-
-        function triggerGlobalSearchPrompt() {
-            const input = document.getElementById('search-input');
-            input.focus();
-            showToast('Type any show title or IMDB/TMDB ID in the search bar!');
+            if (restoreTab) switchTab(state.activeTab);
         }
 
         /**************************************************************
-         * 8. VIDEO PLAYER & VAPLAYER.RU EMBED ENGINE
+         * 9. PLAYER ENGINE + REAL TMDB SEASONS/EPISODES + OMDB DETAILS
          **************************************************************/
-        function playMediaById(uid) {
-            const item = MEDIA_CATALOG.find(m => m.uid === uid) || state.dynamicSearchCache[uid];
+        async function playMediaByUid(uid) {
+            const item = state.mediaRegistry[uid];
             if (!item) return;
-            openPlayerWithMedia(item);
+            await openPlayerWithMedia(item, item.season || 1, item.episode || 1);
         }
 
-        function playFromRecent(uid) {
-            const recentItem = state.recentlyWatched.find(r => r.uid === uid);
-            if (!recentItem) return;
-            openPlayerWithMedia(recentItem, recentItem.season || 1, recentItem.episode || 1);
-        }
-
-        function quickLaunchById(rawId, type) {
-            const isImdb = rawId.toLowerCase().startsWith('tt');
-            const customItem = {
-                uid: `custom-${rawId}`,
-                type: type,
-                title: `${type === 'tv' ? 'TV Series' : 'Movie'} (${rawId})`,
-                year: 'Stream',
-                rating: 'HD',
-                imdbId: isImdb ? rawId : '',
-                tmdbId: !isImdb ? rawId : '',
-                seasons: 5,
-                episodesPerSeason: 12,
-                poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80'
-            };
-            state.dynamicSearchCache[customItem.uid] = customItem;
-            openPlayerWithMedia(customItem, 1, 1);
-        }
-
-        function openPlayerWithMedia(item, season = 1, episode = 1) {
+        async function openPlayerWithMedia(item, season = 1, episode = 1) {
             state.currentMedia = item;
             state.tvSeason = season;
             state.tvEpisode = episode;
 
-            // Choose default ID mode based on availability
-            if (item.imdbId) {
-                state.playerIdMode = 'imdb';
-            } else {
-                state.playerIdMode = 'tmdb';
-            }
+            // Default to TMDB ID if available, otherwise IMDB ID
+            state.playerIdMode = item.tmdbId ? 'tmdb' : 'imdb';
 
-            // Update Modal Header
+            // Show Modal Immediately for fast UX
+            const modal = document.getElementById('player-modal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Header & Poster
             document.getElementById('player-type-badge').textContent = item.type === 'tv' ? 'TV SERIES' : 'MOVIE';
             document.getElementById('player-type-badge').className = item.type === 'tv'
-                ? 'px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-black'
-                : 'px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-brand-500 text-white';
+                ? 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-black'
+                : 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-brand-500 text-white';
 
             document.getElementById('player-title').textContent = item.title;
+            document.getElementById('player-overview').textContent = item.description || '';
 
-            // Show/Hide TV Controls
-            const tvPanel = document.getElementById('tv-controls-panel');
-            if (item.type === 'tv') {
-                tvPanel.classList.remove('hidden');
-                populateSeasonSelector(item.seasons || 5);
-                document.getElementById('tv-season-select').value = String(state.tvSeason);
-                document.getElementById('tv-episode-input').value = String(state.tvEpisode);
-                renderEpisodeButtons(item.episodesPerSeason || 10);
-            } else {
-                tvPanel.classList.add('hidden');
+            const posterThumb = document.getElementById('player-poster-thumb');
+            if (item.poster) {
+                posterThumb.src = item.poster;
+                posterThumb.onerror = () => { posterThumb.src = getPosterFallback(item.title); };
             }
 
             updateIdModeButtonsUI();
             updateTvFormatButtonsUI();
             refreshPlayerIframe();
-
-            // Save to Recently Watched
             saveToRecentlyWatched(item, state.tvSeason, state.tvEpisode);
 
-            // Show Modal
-            const modal = document.getElementById('player-modal');
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+            // Show/Hide TV Season & Episode Panel
+            const tvPanel = document.getElementById('tv-controls-panel');
+            if (item.type === 'tv') {
+                tvPanel.classList.remove('hidden');
+                await loadRealTvDetailsAndSeason(item, state.tvSeason);
+            } else {
+                tvPanel.classList.add('hidden');
+            }
+
+            // Resolve IMDB ID from TMDB if missing, then fetch rich OMDb metadata
+            await ensureImdbId(item);
+            refreshPlayerSubtitle();
+            await loadOmdbMetadata(item);
+        }
+
+        // Fetch real TV show seasons from TMDB `/tv/{id}` and real episodes from `/tv/{id}/season/{season}`
+        async function loadRealTvDetailsAndSeason(item, seasonNumber) {
+            const seasonSelect = document.getElementById('tv-season-select');
+            const epGrid = document.getElementById('episode-buttons-grid');
+
+            // If we only have an IMDB ID (e.g., from OMDb or Direct ID), try resolving TMDB ID first
+            if (!item.tmdbId && item.imdbId) {
+                try {
+                    const findRes = await fetch(`${TMDB_BASE}/find/${item.imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
+                    if (findRes.ok) {
+                        const findData = await findRes.json();
+                        if (findData.tv_results && findData.tv_results.length > 0) {
+                            item.tmdbId = String(findData.tv_results[0].id);
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            if (!item.tmdbId) {
+                // Fallback numeric episode buttons if custom non-TMDB ID
+                seasonSelect.innerHTML = [1, 2, 3, 4, 5].map(s => `<option value="${s}">Season ${s}</option>`).join('');
+                seasonSelect.value = String(seasonNumber);
+                renderFallbackEpisodeButtons(12);
+                return;
+            }
+
+            try {
+                // 1. Fetch TV Show Details to get exact seasons list
+                const tvRes = await fetch(`${TMDB_BASE}/tv/${item.tmdbId}?api_key=${TMDB_API_KEY}`);
+                if (tvRes.ok) {
+                    const tvData = await tvRes.json();
+                    const validSeasons = (tvData.seasons || []).filter(s => s.season_number > 0);
+                    const totalSeasons = validSeasons.length || tvData.number_of_seasons || 1;
+                    item.seasons = totalSeasons;
+
+                    seasonSelect.innerHTML = validSeasons.length
+                        ? validSeasons.map(s => `<option value="${s.season_number}">Season ${s.season_number} (${s.episode_count} Eps)</option>`).join('')
+                        : Array.from({ length: totalSeasons }, (_, i) => `<option value="${i + 1}">Season ${i + 1}</option>`).join('');
+
+                    seasonSelect.value = String(seasonNumber);
+                }
+
+                // 2. Fetch Season Episodes from TMDB `/tv/{id}/season/{season_number}`
+                await fetchAndRenderTmdbSeasonEpisodes(item.tmdbId, seasonNumber);
+            } catch (err) {
+                console.warn('Error loading TMDB TV season details:', err);
+                renderFallbackEpisodeButtons(10);
+            }
+        }
+
+        async function fetchAndRenderTmdbSeasonEpisodes(tmdbId, seasonNumber) {
+            const epGrid = document.getElementById('episode-buttons-grid');
+            const countSpan = document.getElementById('season-episodes-count');
+            epGrid.innerHTML = `<div class="col-span-full text-xs text-gray-400 py-4">Loading Season ${seasonNumber} episodes from TMDB...</div>`;
+
+            try {
+                const res = await fetch(`${TMDB_BASE}/tv/${tmdbId}/season/${seasonNumber}?api_key=${TMDB_API_KEY}`);
+                if (!res.ok) throw new Error('Season fetch failed');
+                const seasonData = await res.json();
+                const episodes = seasonData.episodes || [];
+
+                countSpan.textContent = `${episodes.length} Episodes`;
+
+                if (!episodes.length) {
+                    renderFallbackEpisodeButtons(10);
+                    return;
+                }
+
+                epGrid.innerHTML = episodes.map(ep => {
+                    const epNum = ep.episode_number;
+                    const isActive = epNum === parseInt(state.tvEpisode, 10);
+                    const thumb = ep.still_path
+                        ? `${TMDB_IMG_W300}${ep.still_path}`
+                        : getBackdropFallback(`Ep ${epNum}`);
+                    const epTitle = ep.name || `Episode ${epNum}`;
+                    const rating = ep.vote_average ? Number(ep.vote_average).toFixed(1) : '';
+
+                    return `
+                        <button
+                            onclick="selectEpisode(${epNum})"
+                            class="text-left group rounded-xl p-2 border transition flex items-center gap-2.5 ${
+                                isActive
+                                    ? 'bg-brand-500/20 border-brand-500 text-white shadow-lg shadow-brand-500/10'
+                                    : 'bg-dark-800/90 border-white/10 text-gray-300 hover:bg-dark-700 hover:text-white'
+                            }"
+                        >
+                            <div class="relative w-20 aspect-video rounded-lg overflow-hidden bg-dark-950 shrink-0">
+                                <img src="${thumb}" alt="Ep ${epNum}" loading="lazy" onerror="this.onerror=null;this.src='${getBackdropFallback('Ep ' + epNum)}';" class="w-full h-full object-cover">
+                                <span class="absolute bottom-1 left-1 px-1.5 py-0.2 rounded text-[9px] font-bold ${isActive ? 'bg-brand-500 text-white' : 'bg-black/80 text-gray-200'}">
+                                    E${epNum}
+                                </span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-bold truncate ${isActive ? 'text-brand-400' : 'text-white group-hover:text-brand-400'}">
+                                    ${epNum}. ${epTitle}
+                                </p>
+                                <p class="text-[10px] text-gray-400 mt-0.5 truncate">
+                                    ${ep.runtime ? `${ep.runtime}m` : 'HD'} ${rating && rating !== '0.0' ? `• ⭐ ${rating}` : ''}
+                                </p>
+                            </div>
+                        </button>
+                    `;
+                }).join('');
+            } catch (e) {
+                renderFallbackEpisodeButtons(12);
+            }
+        }
+
+        function renderFallbackEpisodeButtons(count) {
+            const epGrid = document.getElementById('episode-buttons-grid');
+            document.getElementById('season-episodes-count').textContent = `${count} Episodes`;
+            let html = '';
+            for (let ep = 1; ep <= count; ep++) {
+                const isActive = ep === parseInt(state.tvEpisode, 10);
+                html += `
+                    <button
+                        onclick="selectEpisode(${ep})"
+                        class="py-2.5 px-3 rounded-xl text-xs font-bold border transition ${
+                            isActive
+                                ? 'bg-brand-500 text-white border-brand-400'
+                                : 'bg-dark-800 text-gray-300 border-white/10 hover:bg-dark-700'
+                        }"
+                    >
+                        Episode ${ep}
+                    </button>
+                `;
+            }
+            epGrid.innerHTML = html;
+        }
+
+        // Fetch Real OMDb Metadata (`https://www.omdbapi.com/?apikey=c0350149&i=...`)
+        async function loadOmdbMetadata(item) {
+            const badgesContainer = document.getElementById('omdb-badges');
+            const creditsContainer = document.getElementById('omdb-credits');
+            badgesContainer.innerHTML = `<span class="text-xs text-gray-400">Loading OMDb metadata...</span>`;
+            creditsContainer.innerHTML = '';
+
+            try {
+                const queryParam = item.imdbId
+                    ? `i=${encodeURIComponent(item.imdbId)}`
+                    : `t=${encodeURIComponent(item.title)}`;
+
+                const res = await fetch(`${OMDB_BASE}?apikey=${OMDB_API_KEY}&${queryParam}`);
+                if (!res.ok) throw new Error('OMDb error');
+                const data = await res.json();
+
+                if (data && data.Response === "True") {
+                    if (data.imdbID && !item.imdbId) {
+                        item.imdbId = data.imdbID;
+                        refreshPlayerSubtitle();
+                    }
+                    if (data.Plot && data.Plot !== 'N/A' && (!item.description || item.description.startsWith('Stream '))) {
+                        document.getElementById('player-overview').textContent = data.Plot;
+                    }
+
+                    const badges = [];
+                    if (data.imdbRating && data.imdbRating !== 'N/A') {
+                        badges.push(`<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"><i class="fa-brands fa-imdb mr-1"></i>IMDb ${data.imdbRating} (${data.imdbVotes || ''})</span>`);
+                    }
+                    if (data.Rated && data.Rated !== 'N/A') {
+                        badges.push(`<span class="px-2 py-0.5 rounded text-xs font-semibold bg-white/10 text-gray-200 border border-white/10">${data.Rated}</span>`);
+                    }
+                    if (data.Runtime && data.Runtime !== 'N/A') {
+                        badges.push(`<span class="px-2 py-0.5 rounded text-xs font-medium bg-white/5 text-gray-300"><i class="fa-regular fa-clock mr-1"></i>${data.Runtime}</span>`);
+                    }
+                    if (data.Genre && data.Genre !== 'N/A') {
+                        badges.push(`<span class="px-2 py-0.5 rounded text-xs font-medium bg-brand-500/15 text-brand-400 border border-brand-500/25">${data.Genre}</span>`);
+                    }
+                    if (data.Year && data.Year !== 'N/A') {
+                        badges.push(`<span class="px-2 py-0.5 rounded text-xs text-gray-400">${data.Year}</span>`);
+                    }
+                    badgesContainer.innerHTML = badges.join('');
+
+                    const creditLines = [];
+                    if (data.Actors && data.Actors !== 'N/A') {
+                        creditLines.push(`<p><strong class="text-gray-200">Cast:</strong> ${data.Actors}</p>`);
+                    }
+                    if (data.Director && data.Director !== 'N/A') {
+                        creditLines.push(`<p><strong class="text-gray-200">Director:</strong> ${data.Director}</p>`);
+                    }
+                    if (data.Awards && data.Awards !== 'N/A') {
+                        creditLines.push(`<p class="text-amber-400/90"><i class="fa-solid fa-trophy mr-1"></i>${data.Awards}</p>`);
+                    }
+                    creditsContainer.innerHTML = creditLines.join('');
+                } else {
+                    badgesContainer.innerHTML = `
+                        <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400"><i class="fa-solid fa-star mr-1"></i>TMDB ${item.rating || '8.0'}</span>
+                        <span class="px-2 py-0.5 rounded text-xs bg-white/10 text-gray-300">${item.year || ''}</span>
+                    `;
+                }
+            } catch (e) {
+                badgesContainer.innerHTML = `<span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400">TMDB ${item.rating || '8.0'}</span>`;
+            }
         }
 
         /**
-         * Builds the exact embed URL according to the user's documentation screenshots:
+         * Builds the exact vaplayer.ru embed URL according to the documentation:
          * - Movie: https://vaplayer.ru/embed/movie/{id}
          * - TV Numeric: https://vaplayer.ru/embed/tv/{id}/{season}/{episode}
          * - TV SxxExx: https://vaplayer.ru/embed/tv/{id}/S01E01
@@ -1517,7 +1571,7 @@
             if (!item) return '';
 
             const base = state.baseUrl.replace(/\/+$/, '');
-            let activeId = state.playerIdMode === 'imdb'
+            const activeId = state.playerIdMode === 'imdb'
                 ? (item.imdbId || item.tmdbId)
                 : (item.tmdbId || item.imdbId);
 
@@ -1525,7 +1579,6 @@
                 return `${base}/embed/movie/${activeId}`;
             }
 
-            // TV Show Episode Embed
             const s = parseInt(state.tvSeason, 10) || 1;
             const e = parseInt(state.tvEpisode, 10) || 1;
             const fmt = state.tvUrlFormat;
@@ -1540,40 +1593,44 @@
                 const queryId = item.tmdbId || activeId;
                 return `${base}/embed/tv?tmdb=${queryId}&season=${s}&episode=${e}`;
             } else {
-                // Default 'numeric' path: /embed/tv/{id}/{season}/{episode}
                 return `${base}/embed/tv/${activeId}/${s}/${e}`;
             }
         }
 
+        function refreshPlayerSubtitle() {
+            const item = state.currentMedia;
+            if (!item) return;
+            const parts = [
+                item.tmdbId ? `TMDB: ${item.tmdbId}` : null,
+                item.imdbId ? `IMDB: ${item.imdbId}` : null,
+                item.type === 'tv' ? `S${state.tvSeason}:E${state.tvEpisode}` : null
+            ].filter(Boolean);
+            document.getElementById('player-subtitle').textContent = parts.join('  •  ');
+        }
+
         function refreshPlayerIframe() {
             const url = buildEmbedUrl();
-            const item = state.currentMedia;
             const iframe = document.getElementById('video-iframe');
-
             document.getElementById('loader-url-preview').textContent = url;
             document.getElementById('active-embed-url').textContent = url;
-
-            const idSummary = [
-                item.imdbId ? `IMDB: ${item.imdbId}` : null,
-                item.tmdbId ? `TMDB: ${item.tmdbId}` : null,
-                item.type === 'tv' ? `Season ${state.tvSeason} • Episode ${state.tvEpisode}` : null
-            ].filter(Boolean).join('  |  ');
-
-            document.getElementById('player-subtitle').textContent = idSummary;
-
+            refreshPlayerSubtitle();
             iframe.src = url;
         }
 
-        function setPlayerIdMode(mode) {
+        async function setPlayerIdMode(mode) {
             const item = state.currentMedia;
             if (!item) return;
 
             if (mode === 'imdb' && !item.imdbId) {
-                showToast('No IMDB ID available for this title; using TMDB ID.');
-                return;
+                showToast('Fetching IMDb ID from TMDB...');
+                await ensureImdbId(item);
+                if (!item.imdbId) {
+                    showToast('IMDb ID not available for this title; using TMDB ID.');
+                    return;
+                }
             }
             if (mode === 'tmdb' && !item.tmdbId) {
-                showToast('No TMDB ID available for this title; using IMDB ID.');
+                showToast('TMDB ID not available; using IMDb ID.');
                 return;
             }
 
@@ -1587,55 +1644,24 @@
             const tmdbBtn = document.getElementById('id-mode-tmdb');
 
             if (state.playerIdMode === 'imdb') {
-                imdbBtn.className = 'px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition';
-                tmdbBtn.className = 'px-2.5 py-1 rounded-lg font-semibold text-gray-400 hover:text-white transition';
+                imdbBtn.className = 'px-2 sm:px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition';
+                tmdbBtn.className = 'px-2 sm:px-2.5 py-1 rounded-lg font-semibold text-gray-400 hover:text-white transition';
             } else {
-                tmdbBtn.className = 'px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition';
-                imdbBtn.className = 'px-2.5 py-1 rounded-lg font-semibold text-gray-400 hover:text-white transition';
+                tmdbBtn.className = 'px-2 sm:px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition';
+                imdbBtn.className = 'px-2 sm:px-2.5 py-1 rounded-lg font-semibold text-gray-400 hover:text-white transition';
             }
         }
 
-        /**************************************************************
-         * 9. TV SERIES SEASON, EPISODE & URL FORMAT CONTROLS
-         **************************************************************/
-        function populateSeasonSelector(totalSeasons) {
-            const select = document.getElementById('tv-season-select');
-            let html = '';
-            for (let s = 1; s <= totalSeasons; s++) {
-                html += `<option value="${s}">Season ${s}</option>`;
-            }
-            select.innerHTML = html;
-        }
-
-        function renderEpisodeButtons(totalEpisodes) {
-            const container = document.getElementById('episode-buttons-grid');
-            let html = '';
-            for (let ep = 1; ep <= totalEpisodes; ep++) {
-                const isActive = ep === parseInt(state.tvEpisode, 10);
-                html += `
-                    <button
-                        onclick="selectEpisode(${ep})"
-                        class="py-2 px-2 rounded-xl text-xs font-bold border transition ${
-                            isActive
-                                ? 'bg-brand-500 text-white border-brand-400 shadow-lg shadow-brand-500/30'
-                                : 'bg-dark-800 text-gray-300 border-white/10 hover:bg-dark-700 hover:text-white'
-                        }"
-                    >
-                        Ep ${ep}
-                    </button>
-                `;
-            }
-            container.innerHTML = html;
-        }
-
-        function onSeasonChange() {
+        async function onSeasonChange() {
             const s = parseInt(document.getElementById('tv-season-select').value, 10) || 1;
             state.tvSeason = s;
             state.tvEpisode = 1;
             document.getElementById('tv-episode-input').value = '1';
-            renderEpisodeButtons((state.currentMedia && state.currentMedia.episodesPerSeason) || 10);
             refreshPlayerIframe();
             saveToRecentlyWatched(state.currentMedia, state.tvSeason, state.tvEpisode);
+            if (state.currentMedia && state.currentMedia.tmdbId) {
+                await fetchAndRenderTmdbSeasonEpisodes(state.currentMedia.tmdbId, s);
+            }
         }
 
         function onEpisodeInputChange(val) {
@@ -1643,13 +1669,16 @@
             selectEpisode(ep);
         }
 
-        function selectEpisode(ep) {
+        async function selectEpisode(ep) {
             state.tvEpisode = ep;
             document.getElementById('tv-episode-input').value = String(ep);
-            const totalEps = Math.max((state.currentMedia && state.currentMedia.episodesPerSeason) || 10, ep);
-            renderEpisodeButtons(totalEps);
             refreshPlayerIframe();
             saveToRecentlyWatched(state.currentMedia, state.tvSeason, state.tvEpisode);
+            if (state.currentMedia && state.currentMedia.tmdbId) {
+                await fetchAndRenderTmdbSeasonEpisodes(state.currentMedia.tmdbId, state.tvSeason);
+            } else {
+                renderFallbackEpisodeButtons(Math.max(12, ep));
+            }
         }
 
         function stepEpisode(delta) {
@@ -1666,17 +1695,16 @@
         function updateTvFormatButtonsUI() {
             document.querySelectorAll('.tv-fmt-btn').forEach(btn => {
                 if (btn.dataset.fmt === state.tvUrlFormat) {
-                    btn.className = 'tv-fmt-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-500 text-white transition';
+                    btn.className = 'tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold bg-brand-500 text-white transition';
                 } else {
-                    btn.className = 'tv-fmt-btn px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition';
+                    btn.className = 'tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-400 hover:text-white transition';
                 }
             });
         }
 
         function closePlayerModal() {
             const modal = document.getElementById('player-modal');
-            const iframe = document.getElementById('video-iframe');
-            iframe.src = ''; // Stop playback when modal closes
+            document.getElementById('video-iframe').src = '';
             modal.classList.add('hidden');
             document.body.style.overflow = '';
             renderRecentlyWatched();
@@ -1695,29 +1723,178 @@
             }
         }
 
+        /**************************************************************
+         * 10. NAVIGATION, WATCHLIST & CONTINUE WATCHING
+         **************************************************************/
+        function switchTab(tab) {
+            state.activeTab = tab;
+            clearSearch(false);
+
+            // Desktop Nav Highlight
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'text-white');
+                btn.classList.add('text-gray-300');
+            });
+            const dBtn = document.getElementById(`nav-${tab}`);
+            if (dBtn) {
+                dBtn.classList.add('bg-white/10', 'text-white');
+                dBtn.classList.remove('text-gray-300');
+            }
+
+            // Mobile Bottom Nav Highlight
+            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('text-brand-500', 'font-semibold');
+                btn.classList.add('text-gray-400', 'font-medium');
+            });
+            const mBtn = document.getElementById(`mnav-${tab}`);
+            if (mBtn) {
+                mBtn.classList.add('text-brand-500', 'font-semibold');
+                mBtn.classList.remove('text-gray-400', 'font-medium');
+            }
+
+            const hero = document.getElementById('hero-section');
+            const catalog = document.getElementById('catalog-container');
+            const moviesSec = document.getElementById('movies-section');
+            const tvSec = document.getElementById('tv-section');
+            const topSec = document.getElementById('top-rated-section');
+            const wlSec = document.getElementById('watchlist-section');
+
+            if (tab === 'home') {
+                hero.classList.remove('hidden');
+                catalog.classList.remove('hidden');
+                moviesSec.classList.remove('hidden');
+                tvSec.classList.remove('hidden');
+                topSec.classList.remove('hidden');
+                wlSec.classList.add('hidden');
+                renderRecentlyWatched();
+            } else if (tab === 'movies') {
+                hero.classList.add('hidden');
+                catalog.classList.remove('hidden');
+                moviesSec.classList.remove('hidden');
+                tvSec.classList.add('hidden');
+                topSec.classList.remove('hidden');
+                wlSec.classList.add('hidden');
+                document.getElementById('recently-watched-section').classList.add('hidden');
+            } else if (tab === 'tv') {
+                hero.classList.add('hidden');
+                catalog.classList.remove('hidden');
+                moviesSec.classList.add('hidden');
+                tvSec.classList.remove('hidden');
+                topSec.classList.add('hidden');
+                wlSec.classList.add('hidden');
+                document.getElementById('recently-watched-section').classList.add('hidden');
+            } else if (tab === 'watchlist') {
+                hero.classList.add('hidden');
+                catalog.classList.add('hidden');
+                wlSec.classList.remove('hidden');
+                document.getElementById('recently-watched-section').classList.add('hidden');
+                renderWatchlist();
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function persistRegistry() {
+            localStorage.setItem('cinevault_registry_v2', JSON.stringify(state.mediaRegistry));
+        }
+
+        function toggleWatchlist(uid) {
+            const idx = state.watchlist.indexOf(uid);
+            if (idx > -1) {
+                state.watchlist.splice(idx, 1);
+                showToast('Removed from Watchlist');
+            } else {
+                state.watchlist.push(uid);
+                showToast('Added to Watchlist');
+            }
+            localStorage.setItem('cinevault_watchlist_v2', JSON.stringify(state.watchlist));
+            persistRegistry();
+            updateWatchlistBadge();
+            updateHeroBannerUI();
+            renderCatalogGrids(state.trendingMovies, state.trendingTv, state.topRatedMovies);
+            if (state.activeTab === 'watchlist') renderWatchlist();
+        }
+
+        function updateWatchlistBadge() {
+            const count = state.watchlist.length;
+            const dBadge = document.getElementById('watchlist-badge');
+            const mBadge = document.getElementById('mobile-watchlist-badge');
+            if (count > 0) {
+                dBadge.textContent = count;
+                dBadge.classList.remove('hidden');
+                mBadge.textContent = count;
+                mBadge.classList.remove('hidden');
+            } else {
+                dBadge.classList.add('hidden');
+                mBadge.classList.add('hidden');
+            }
+        }
+
+        function renderWatchlist() {
+            const grid = document.getElementById('watchlist-grid');
+            const items = state.watchlist.map(uid => state.mediaRegistry[uid]).filter(Boolean);
+            if (!items.length) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-14 text-center bg-dark-900/60 rounded-2xl border border-white/10 p-6">
+                        <i class="fa-regular fa-bookmark text-3xl text-gray-500 mb-3"></i>
+                        <h3 class="font-display font-bold text-base sm:text-lg text-white">Your Watchlist is Empty</h3>
+                        <p class="text-xs text-gray-400 mt-1">Tap the bookmark icon on any movie or TV series to save it here.</p>
+                    </div>
+                `;
+                return;
+            }
+            grid.innerHTML = items.map(createMediaCardHTML).join('');
+        }
+
         function saveToRecentlyWatched(item, season, episode) {
             if (!item) return;
             const entry = {
-                uid: item.uid,
-                type: item.type,
-                title: item.title,
-                imdbId: item.imdbId,
-                tmdbId: item.tmdbId,
-                poster: item.poster,
-                seasons: item.seasons || 5,
-                episodesPerSeason: item.episodesPerSeason || 10,
+                ...item,
                 season: season || 1,
                 episode: episode || 1
             };
+            state.mediaRegistry[item.uid] = entry;
             state.recentlyWatched = [
                 entry,
                 ...state.recentlyWatched.filter(r => r.uid !== item.uid)
-            ].slice(0, 12);
-            localStorage.setItem('cinevault_recent', JSON.stringify(state.recentlyWatched));
+            ].slice(0, 8);
+            localStorage.setItem('cinevault_recent_v2', JSON.stringify(state.recentlyWatched));
+            persistRegistry();
+        }
+
+        function renderRecentlyWatched() {
+            const section = document.getElementById('recently-watched-section');
+            const grid = document.getElementById('recently-watched-grid');
+            if (!state.recentlyWatched.length || state.activeTab !== 'home') {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            grid.innerHTML = state.recentlyWatched.slice(0, 4).map(item => `
+                <div onclick="playMediaByUid('${item.uid}')" class="group cursor-pointer bg-dark-900 border border-white/10 hover:border-brand-500/50 rounded-xl p-2.5 flex items-center gap-3 transition">
+                    <img src="${item.poster}" alt="${item.title}" onerror="this.onerror=null;this.src='${getPosterFallback(item.title)}';" class="w-12 h-16 object-cover rounded-lg shrink-0">
+                    <div class="overflow-hidden flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${item.type === 'tv' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-500/20 text-brand-400'}">
+                                ${item.type === 'tv' ? `S${item.season || 1}:E${item.episode || 1}` : 'Movie'}
+                            </span>
+                            <span class="text-[10px] text-gray-400 font-mono truncate">${item.imdbId || `TMDB ${item.tmdbId}`}</span>
+                        </div>
+                        <h4 class="text-xs sm:text-sm font-bold text-white truncate mt-1 group-hover:text-brand-400 transition">${item.title}</h4>
+                    </div>
+                    <i class="fa-solid fa-circle-play text-brand-500 text-lg mr-1"></i>
+                </div>
+            `).join('');
+        }
+
+        function clearRecentlyWatched() {
+            state.recentlyWatched = [];
+            localStorage.removeItem('cinevault_recent_v2');
+            renderRecentlyWatched();
+            showToast('Watch history cleared');
         }
 
         /**************************************************************
-         * 10. DIRECT ID STREAM MODAL & SETTINGS MODAL
+         * 11. DIRECT ID STREAMER & SETTINGS
          **************************************************************/
         function openDirectPlayModal() {
             document.getElementById('direct-play-modal').classList.remove('hidden');
@@ -1729,57 +1906,84 @@
 
         function setDirectModalType(type) {
             state.directModalType = type;
-            const movieBtn = document.getElementById('direct-type-movie');
-            const tvBtn = document.getElementById('direct-type-tv');
+            const mBtn = document.getElementById('direct-type-movie');
+            const tBtn = document.getElementById('direct-type-tv');
             const tvFields = document.getElementById('direct-tv-fields');
             const idInput = document.getElementById('direct-id-input');
 
             if (type === 'movie') {
-                movieBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition';
-                tvBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition';
+                mBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition';
+                tBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition';
                 tvFields.classList.add('hidden');
                 if (idInput.value === '205715') idInput.value = 'tt23779058';
             } else {
-                tvBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition';
-                movieBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition';
+                tBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition';
+                mBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition';
                 tvFields.classList.remove('hidden');
                 if (idInput.value === 'tt23779058') idInput.value = '205715';
             }
         }
 
-        function launchDirectStream() {
-            const rawId = document.getElementById('direct-id-input').value.trim();
-            const customTitle = document.getElementById('direct-title-input').value.trim();
-            const season = parseInt(document.getElementById('direct-season-input').value, 10) || 1;
-            const episode = parseInt(document.getElementById('direct-episode-input').value, 10) || 1;
-
-            if (!rawId) {
-                showToast('Please enter a valid IMDB ID (tt...) or TMDB ID');
-                return;
-            }
-
+        async function quickLaunchById(rawId, type, season = 1, episode = 1) {
             const isImdb = rawId.toLowerCase().startsWith('tt');
-            const customMedia = {
-                uid: `direct-${rawId}`,
-                type: state.directModalType,
-                title: customTitle || `${state.directModalType === 'tv' ? 'TV Show' : 'Movie'} (${rawId})`,
-                year: 'Direct Stream',
+            const uid = `direct-${type}-${rawId}`;
+            let customMedia = {
+                uid,
+                type,
+                title: `${type === 'tv' ? 'TV Series' : 'Movie'} (${rawId})`,
+                year: '',
                 rating: 'HD',
                 imdbId: isImdb ? rawId : '',
                 tmdbId: !isImdb ? rawId : '',
-                seasons: Math.max(5, season),
-                episodesPerSeason: Math.max(12, episode),
-                poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=600&q=80'
+                genres: [type === 'tv' ? 'TV Series' : 'Movie'],
+                poster: getPosterFallback(rawId),
+                backdrop: getBackdropFallback(rawId),
+                description: `Streaming ${rawId} via vaplayer.ru embed API.`
             };
 
-            state.dynamicSearchCache[customMedia.uid] = customMedia;
-            closeDirectPlayModal();
+            // Enrich title and poster from TMDB / OMDb automatically
+            try {
+                if (isImdb) {
+                    const omdbRes = await fetch(`${OMDB_BASE}?apikey=${OMDB_API_KEY}&i=${encodeURIComponent(rawId)}`);
+                    if (omdbRes.ok) {
+                        const omdbData = await omdbRes.json();
+                        if (omdbData && omdbData.Response === 'True') {
+                            customMedia.title = omdbData.Title || customMedia.title;
+                            customMedia.year = omdbData.Year || '';
+                            customMedia.rating = omdbData.imdbRating || 'HD';
+                            if (omdbData.Poster && omdbData.Poster !== 'N/A') customMedia.poster = omdbData.Poster;
+                            customMedia.description = omdbData.Plot || customMedia.description;
+                        }
+                    }
+                } else {
+                    const tmdbRes = await fetch(`${TMDB_BASE}/${type}/${encodeURIComponent(rawId)}?api_key=${TMDB_API_KEY}`);
+                    if (tmdbRes.ok) {
+                        const tmdbData = await tmdbRes.json();
+                        customMedia = normalizeTmdbItem(tmdbData, type);
+                    }
+                }
+            } catch (e) {}
+
+            state.mediaRegistry[customMedia.uid] = customMedia;
             openPlayerWithMedia(customMedia, season, episode);
+        }
+
+        function launchDirectStream() {
+            const rawId = document.getElementById('direct-id-input').value.trim();
+            const season = parseInt(document.getElementById('direct-season-input').value, 10) || 1;
+            const episode = parseInt(document.getElementById('direct-episode-input').value, 10) || 1;
+            if (!rawId) {
+                showToast('Please enter a valid IMDB or TMDB ID');
+                return;
+            }
+            closeDirectPlayModal();
+            quickLaunchById(rawId, state.directModalType, season, episode);
         }
 
         function openSettingsModal() {
             document.getElementById('settings-base-url').value = state.baseUrl;
-            document.getElementById('settings-tmdb-key').value = state.tmdbApiKey;
+            document.getElementById('settings-tmdb-key').value = TMDB_API_KEY;
+            document.getElementById('settings-omdb-key').value = OMDB_API_KEY;
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 
@@ -1789,20 +1993,14 @@
 
         function saveSettings() {
             const baseUrl = document.getElementById('settings-base-url').value.trim() || 'https://vaplayer.ru';
-            const tmdbKey = document.getElementById('settings-tmdb-key').value.trim();
-
             state.baseUrl = baseUrl;
-            state.tmdbApiKey = tmdbKey;
-
             localStorage.setItem('cinevault_base_url', baseUrl);
-            localStorage.setItem('cinevault_tmdb_key', tmdbKey);
-
             closeSettingsModal();
-            showToast('Settings saved successfully');
+            showToast('Stream base URL saved!');
         }
 
         /**************************************************************
-         * 11. CLIPBOARD & TOAST HELPERS
+         * 12. CLIPBOARD & TOAST UTILITIES
          **************************************************************/
         function copyTextToClipboard(text) {
             const textarea = document.createElement('textarea');
@@ -1814,29 +2012,25 @@
         }
 
         function copyEmbedUrl() {
-            const url = buildEmbedUrl();
-            copyTextToClipboard(url);
+            copyTextToClipboard(buildEmbedUrl());
             showToast('Embed URL copied to clipboard!');
         }
 
         function copyEmbedHtml() {
             const url = buildEmbedUrl();
-            const iframeHtml = `<iframe\n  src="${url}"\n  width="100%" height="100%"\n  frameborder="0" allowfullscreen\n></iframe>`;
-            copyTextToClipboard(iframeHtml);
+            const html = `<iframe\n  src="${url}"\n  width="100%" height="100%"\n  frameborder="0" allowfullscreen\n></iframe>`;
+            copyTextToClipboard(html);
             showToast('HTML <iframe> code copied!');
         }
 
-        let toastTimeout = null;
-        function showToast(message) {
+        let toastTimer = null;
+        function showToast(msg) {
             const toast = document.getElementById('toast');
-            document.getElementById('toast-message').textContent = message;
+            document.getElementById('toast-message').textContent = msg;
             toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            }, 10);
-
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
                 setTimeout(() => toast.classList.add('hidden'), 300);
             }, 3000);
