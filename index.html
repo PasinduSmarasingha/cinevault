@@ -14,6 +14,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts: Inter & Outfit -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- Supabase JS v2 Global CDN (No module script needed) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -117,7 +120,7 @@
                                 Cine<span class="text-brand-500">Vault</span>
                             </span>
                             <span class="text-[9px] uppercase tracking-widest text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> TMDB + OMDb Live
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> TMDB + Supabase Cloud
                             </span>
                         </div>
                     </a>
@@ -141,13 +144,21 @@
                 </div>
 
                 <!-- Mobile-Only Quick Action Buttons (Right side of Row 1) -->
-                <div class="flex md:hidden items-center gap-2">
+                <div class="flex md:hidden items-center gap-1.5">
+                    <button
+                        onclick="openAuthModal()"
+                        id="mobile-header-auth-btn"
+                        class="px-2.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition"
+                    >
+                        <span id="mobile-auth-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        <span id="mobile-header-auth-label">Login</span>
+                    </button>
                     <button
                         onclick="openDirectPlayModal()"
-                        class="px-3 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-rose-600 text-white text-xs font-semibold shadow-md shadow-brand-600/20 flex items-center gap-1.5 active:scale-95 transition"
+                        class="px-2.5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-rose-600 text-white text-xs font-semibold shadow-md shadow-brand-600/20 flex items-center gap-1 active:scale-95 transition"
                     >
                         <i class="fa-solid fa-bolt"></i>
-                        <span>Direct ID</span>
+                        <span>ID</span>
                     </button>
                     <button
                         onclick="openSettingsModal()"
@@ -160,14 +171,14 @@
             </div>
 
             <!-- Row 2 on Mobile / Right Side on Desktop: Full-Width Responsive Search Form + Desktop Quick Buttons -->
-            <div class="flex items-center gap-2.5 flex-1 md:max-w-md lg:max-w-lg justify-end w-full">
+            <div class="flex items-center gap-2.5 flex-1 md:max-w-xl lg:max-w-2xl justify-end w-full">
                 <form onsubmit="event.preventDefault(); executeLiveSearch(document.getElementById('search-input').value);" class="relative flex items-center w-full">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs sm:text-sm pointer-events-none"></i>
                     <input
                         id="search-input"
                         type="search"
                         enterkeyhint="search"
-                         autocomplete="off"
+                        autocomplete="off"
                         placeholder="Search movies, series, or IMDB ID (tt...)..."
                         class="w-full pl-9 sm:pl-10 pr-24 sm:pr-28 py-2 sm:py-2.5 bg-dark-800/95 border border-white/15 rounded-xl text-xs sm:text-sm text-white placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition"
                         oninput="handleSearchInput(this.value)"
@@ -199,6 +210,18 @@
                 >
                     <i class="fa-solid fa-bolt"></i>
                     <span>Direct ID</span>
+                </button>
+
+                <!-- Desktop Account / Cloud Sync Button -->
+                <button
+                    onclick="openAuthModal()"
+                    id="desktop-header-auth-btn"
+                    title="Account & Cross-Device Cloud Sync"
+                    class="hidden md:flex shrink-0 px-3.5 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/15 text-white text-xs lg:text-sm font-semibold items-center gap-2 transition"
+                >
+                    <span id="desktop-auth-dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <i class="fa-regular fa-user text-brand-400" id="desktop-auth-icon"></i>
+                    <span id="desktop-header-auth-label">Login</span>
                 </button>
 
                 <button
@@ -297,10 +320,15 @@
 
         <!-- CONTINUE WATCHING / RECENTLY PLAYED -->
         <section id="recently-watched-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8 hidden">
-            <div class="flex items-center justify-between mb-3.5">
-                <h2 class="font-display text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Continue Watching
-                </h2>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5">
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <h2 class="font-display text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Continue Watching
+                    </h2>
+                    <button onclick="openAuthModal()" id="continue-watching-sync-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 flex items-center gap-1.5 transition">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Guest Device (Tap to Sync)
+                    </button>
+                </div>
                 <button onclick="clearRecentlyWatched()" class="text-xs text-gray-400 hover:text-rose-400 transition">
                     Clear History
                 </button>
@@ -377,7 +405,7 @@
                     <h2 class="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5">
                         <i class="fa-solid fa-bookmark text-brand-500"></i> My Watchlist
                     </h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Saved movies and TV series on your device</p>
+                    <p class="text-xs text-gray-400 mt-0.5">Saved movies and TV series synced with your account</p>
                 </div>
             </div>
             <div id="watchlist-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
@@ -388,23 +416,28 @@
     <!-- =========================================================
          MOBILE FIXED BOTTOM NAVIGATION BAR
          ========================================================= -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-950/95 backdrop-blur-xl border-t border-white/10 px-2 py-1.5 flex items-center justify-around shadow-2xl">
-        <button onclick="switchTab('home')" id="mnav-home" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-brand-500 font-semibold text-[11px] transition">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-dark-950/95 backdrop-blur-xl border-t border-white/10 px-1.5 py-1.5 flex items-center justify-around shadow-2xl">
+        <button onclick="switchTab('home')" id="mnav-home" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-brand-500 font-semibold text-[11px] transition">
             <i class="fa-solid fa-compass text-base mb-0.5"></i>
             <span>Home</span>
         </button>
-        <button onclick="switchTab('movies')" id="mnav-movies" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-gray-400 font-medium text-[11px] transition">
+        <button onclick="switchTab('movies')" id="mnav-movies" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-medium text-[11px] transition">
             <i class="fa-solid fa-film text-base mb-0.5"></i>
             <span>Movies</span>
         </button>
-        <button onclick="switchTab('tv')" id="mnav-tv" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-3 rounded-xl text-gray-400 font-medium text-[11px] transition">
+        <button onclick="switchTab('tv')" id="mnav-tv" class="mobile-nav-btn flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-medium text-[11px] transition">
             <i class="fa-solid fa-tv text-base mb-0.5"></i>
             <span>TV Series</span>
         </button>
-        <button onclick="switchTab('watchlist')" id="mnav-watchlist" class="mobile-nav-btn relative flex flex-col items-center justify-center py-1 px-3 rounded-xl text-gray-400 font-medium text-[11px] transition">
+        <button onclick="switchTab('watchlist')" id="mnav-watchlist" class="mobile-nav-btn relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-medium text-[11px] transition">
             <i class="fa-solid fa-bookmark text-base mb-0.5"></i>
             <span>Watchlist</span>
-            <span id="mobile-watchlist-badge" class="hidden absolute top-0.5 right-2 w-4 h-4 rounded-full bg-brand-500 text-white text-[9px] font-bold flex items-center justify-center">0</span>
+            <span id="mobile-watchlist-badge" class="hidden absolute top-0.5 right-1.5 w-4 h-4 rounded-full bg-brand-500 text-white text-[9px] font-bold flex items-center justify-center">0</span>
+        </button>
+        <button onclick="openAuthModal()" id="mnav-account" class="mobile-nav-btn relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl text-gray-400 font-medium text-[11px] transition">
+            <i class="fa-solid fa-circle-user text-base mb-0.5" id="mnav-account-icon"></i>
+            <span id="mnav-account-label">Account</span>
+            <span id="mobile-cloud-dot" class="w-2 h-2 rounded-full bg-amber-400 absolute top-1 right-2.5"></span>
         </button>
     </nav>
 
@@ -638,6 +671,174 @@
     </div>
 
     <!-- =========================================================
+         SUPABASE ACCOUNT & CLOUD SYNC MODAL (Username/Email + Password)
+         ========================================================= -->
+    <div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-5 my-8">
+
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-rose-400 text-white flex items-center justify-center shadow-lg shadow-brand-500/25">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-base sm:text-lg text-white">CineVault Cloud Account</h3>
+                        <p class="text-xs text-gray-400">Sync "Continue Watching" & Watchlist on any device</p>
+                    </div>
+                </div>
+                <button onclick="closeAuthModal()" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- VIEW A: LOGGED OUT (SIGN IN / CREATE ACCOUNT FORM) -->
+            <div id="auth-logged-out-view" class="space-y-4">
+                <!-- Mode Switch Tabs -->
+                <div class="grid grid-cols-2 gap-2 bg-dark-800 p-1 rounded-xl border border-white/10">
+                    <button id="auth-tab-login" type="button" onclick="setAuthModalMode('login')" class="py-2 rounded-lg text-xs sm:text-sm font-semibold bg-brand-500 text-white transition">
+                        Sign In
+                    </button>
+                    <button id="auth-tab-register" type="button" onclick="setAuthModalMode('register')" class="py-2 rounded-lg text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition">
+                        Create Account
+                    </button>
+                </div>
+
+                <form id="auth-form" onsubmit="event.preventDefault(); submitAuthForm();" class="space-y-3.5">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300">
+                                Username or Email
+                            </label>
+                            <span id="username-norm-preview" class="text-[10px] font-mono text-brand-400 hidden"></span>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-regular fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input
+                                id="auth-identifier-input"
+                                type="text"
+                                required
+                                autocomplete="username"
+                                placeholder="e.g. pasindu or pasindu@email.com"
+                                oninput="updateUsernamePreview(this.value)"
+                                class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
+                            >
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-1">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            <input
+                                id="auth-password-input"
+                                type="password"
+                                required
+                                minlength="6"
+                                autocomplete="current-password"
+                                placeholder="Minimum 6 characters"
+                                class="w-full pl-9 pr-10 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
+                            >
+                            <button
+                                type="button"
+                                onclick="toggleAuthPasswordVisibility()"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+                                tabindex="-1"
+                            >
+                                <i id="auth-pw-eye" class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- One-Time Login Persistence Info Box -->
+                    <div class="bg-dark-800/80 border border-white/10 rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-gray-300">
+                        <i class="fa-solid fa-shield-halved text-emerald-400 mt-0.5"></i>
+                        <div>
+                            <span class="font-semibold text-white">One-Time Persistent Login:</span>
+                            Once signed in, you stay logged in on this device automatically—even after closing the browser—until you press Logout.
+                        </div>
+                    </div>
+
+                    <!-- Error Message Box -->
+                    <div id="auth-error-box" class="hidden bg-rose-500/15 border border-rose-500/40 text-rose-300 rounded-xl px-3.5 py-2.5 text-xs flex items-start gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400 mt-0.5 shrink-0"></i>
+                        <span id="auth-error-text"></span>
+                    </div>
+
+                    <button
+                        type="submit"
+                        id="auth-submit-btn"
+                        class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-500 hover:to-rose-500 text-white font-semibold text-sm shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition disabled:opacity-50"
+                    >
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span id="auth-submit-label">Sign In & Sync Devices</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- VIEW B: LOGGED IN (PROFILE, CLOUD SYNC STATUS & LOGOUT) -->
+            <div id="auth-logged-in-view" class="hidden space-y-4">
+                <div class="bg-dark-800/90 border border-emerald-500/30 rounded-2xl p-4 flex items-center gap-3.5">
+                    <div id="profile-avatar" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-rose-400 text-white font-display font-extrabold text-xl flex items-center justify-center shrink-0 uppercase shadow-md">
+                        U
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-2">
+                            <h4 id="profile-username" class="font-display font-bold text-base text-white truncate">@username</h4>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Supabase Synced
+                            </span>
+                        </div>
+                        <p id="profile-email" class="text-xs text-gray-400 font-mono truncate mt-0.5"></p>
+                        <p id="profile-uid-display" class="text-[10px] text-gray-500 font-mono truncate mt-0.5"></p>
+                    </div>
+                </div>
+
+                <!-- Synced Items Summary -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-dark-800/70 border border-white/10 rounded-xl p-3 text-center">
+                        <p id="profile-recent-count" class="font-display font-extrabold text-xl text-brand-400">0</p>
+                        <p class="text-[11px] text-gray-400">Continue Watching</p>
+                    </div>
+                    <div class="bg-dark-800/70 border border-white/10 rounded-xl p-3 text-center">
+                        <p id="profile-watchlist-count" class="font-display font-extrabold text-xl text-amber-400">0</p>
+                        <p class="text-[11px] text-gray-400">Saved in Watchlist</p>
+                    </div>
+                </div>
+
+                <div class="bg-dark-800/50 border border-white/5 rounded-xl p-3 text-xs text-gray-300 space-y-1">
+                    <p class="font-semibold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-laptop-mobile text-brand-400"></i> Cross-Device Sync Active
+                    </p>
+                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                        Log in with <strong id="profile-login-hint" class="text-gray-200"></strong> on your phone, tablet, or PC to pick up right where you left off.
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between gap-3 pt-2 border-t border-white/10">
+                    <button
+                        type="button"
+                        onclick="forceCloudSyncNow()"
+                        class="flex-1 py-2.5 px-4 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-semibold text-gray-200 flex items-center justify-center gap-1.5 transition"
+                    >
+                        <i class="fa-solid fa-arrows-rotate text-emerald-400"></i> Sync Now
+                    </button>
+                    <button
+                        type="button"
+                        onclick="handleAccountLogout()"
+                        class="flex-1 py-2.5 px-4 rounded-xl bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                    >
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- =========================================================
          SETTINGS & API KEYS MODAL
          ========================================================= -->
     <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
@@ -649,7 +850,7 @@
                     </div>
                     <div>
                         <h3 class="font-display font-bold text-base sm:text-lg text-white">API & Stream Configuration</h3>
-                        <p class="text-xs text-gray-400">Hardcoded TMDB & OMDb keys active</p>
+                        <p class="text-xs text-gray-400">Hardcoded TMDB, OMDb & Supabase keys active</p>
                     </div>
                 </div>
                 <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1">
@@ -668,24 +869,39 @@
                     >
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">TMDB API Key (Hardcoded Active)</label>
-                    <input
-                        id="settings-tmdb-key"
-                        type="text"
-                        readonly
-                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono"
-                    >
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">TMDB API Key (Active)</label>
+                        <input
+                            id="settings-tmdb-key"
+                            type="text"
+                            readonly
+                            class="w-full px-3.5 py-2 rounded-xl bg-dark-800/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">OMDb API Key (Active)</label>
+                        <input
+                            id="settings-omdb-key"
+                            type="text"
+                            readonly
+                            class="w-full px-3.5 py-2 rounded-xl bg-dark-800/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono"
+                        >
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">OMDb API Key (Hardcoded Active)</label>
-                    <input
-                        id="settings-omdb-key"
-                        type="text"
-                        readonly
-                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800/60 border border-emerald-500/30 text-emerald-400 text-xs font-mono"
-                    >
+                <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/25 p-3.5 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <i class="fa-solid fa-database text-emerald-400 text-base"></i>
+                        <div>
+                            <p class="text-xs font-bold text-white">Supabase Cloud Database Connected</p>
+                            <p class="text-[11px] text-gray-400 font-mono">skfbbyazwskirebvgcwd.supabase.co</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                        Active
+                    </span>
                 </div>
             </div>
 
@@ -716,9 +932,11 @@
                     <i class="fa-solid fa-play text-[10px] ml-0.5"></i>
                 </div>
                 <span class="font-display font-bold text-white text-base">CineVault</span>
-                <span>• Live Data by TMDB & OMDb • Player by <code class="text-gray-300">vaplayer.ru</code></span>
+                <span>• Live Data by TMDB & OMDb • Cloud Sync by Supabase • Player by <code class="text-gray-300">vaplayer.ru</code></span>
             </div>
             <div class="flex flex-wrap items-center gap-4">
+                <button onclick="openAuthModal()" class="hover:text-white transition">Cloud Account</button>
+                <span>•</span>
                 <button onclick="openDirectPlayModal()" class="hover:text-white transition">Direct ID Player</button>
                 <span>•</span>
                 <button onclick="openSettingsModal()" class="hover:text-white transition">API Status</button>
@@ -727,14 +945,17 @@
     </footer>
 
     <!-- =========================================================
-         APPLICATION JAVASCRIPT (REAL TMDB + OMDB + VAPLAYER API)
+         APPLICATION JAVASCRIPT (REAL TMDB + OMDB + SUPABASE + VAPLAYER)
          ========================================================= -->
     <script>
         /**************************************************************
-         * 1. HARDCODED API KEYS & ENDPOINTS
+         * 1. HARDCODED API KEYS & SUPABASE CREDENTIALS
          **************************************************************/
         const TMDB_API_KEY = "dfcc7d929c4e97c540ccbc6d1bbd2d25";
         const OMDB_API_KEY = "c0350149";
+
+        const SUPABASE_URL = "https://skfbbyazwskirebvgcwd.supabase.co";
+        const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2XSFZKrPULCggn-jYQ8YvA_eeCukJCt";
 
         const TMDB_BASE = "https://api.themoviedb.org/3";
         const TMDB_IMG_W500 = "https://image.tmdb.org/t/p/w500";
@@ -786,12 +1007,17 @@
             tvEpisode: 1,
             tvUrlFormat: 'numeric', // 'numeric' | 'sxxexx' | 'dash' | 'query'
             lightsOff: false,
-            directModalType: 'movie'
+            directModalType: 'movie',
+            // Auth & Supabase Cloud Sync State
+            authMode: 'login', // 'login' | 'register'
+            currentUser: null
         };
 
         // Restore cached registry items for watchlist/recent
-        const savedRegistry = JSON.parse(localStorage.getItem('cinevault_registry_v2') || '{}');
-        Object.assign(state.mediaRegistry, savedRegistry);
+        try {
+            const savedRegistry = JSON.parse(localStorage.getItem('cinevault_registry_v2') || '{}');
+            Object.assign(state.mediaRegistry, savedRegistry);
+        } catch (e) {}
 
         /**************************************************************
          * 3. INITIALIZATION & SKELETON LOADERS
@@ -800,7 +1026,13 @@
             renderSkeletonGrids();
             updateWatchlistBadge();
             renderRecentlyWatched();
+            updateAuthUI();
+
+            // Load live TMDB & OMDb catalog independently
             loadInitialTmdbCatalog(false);
+
+            // Initialize Supabase persistent session & cloud sync
+            initSupabaseAuthAndSync();
 
             // Auto-advance hero banner every 8 seconds
             setInterval(() => {
@@ -930,7 +1162,6 @@
                     if (data.imdb_id) {
                         item.imdbId = data.imdb_id;
                         state.mediaRegistry[item.uid] = item;
-                        // If this item is currently shown on the hero banner, refresh its meta badge
                         const currentHero = state.heroItems[state.heroIndex];
                         if (currentHero && currentHero.uid === item.uid) {
                             updateHeroBannerUI();
@@ -1090,18 +1321,16 @@
             const tvGrid = document.getElementById('tv-grid');
             const topGrid = document.getElementById('top-rated-grid');
 
-            moviesGrid.innerHTML = moviesList.length
-                ? moviesList.map(createMediaCardHTML).join('')
-                : `<p class="text-gray-400 text-sm col-span-full py-6">No movies found for this genre.</p>`;
+            if (moviesList && moviesList.length) {
+                moviesGrid.innerHTML = moviesList.map(createMediaCardHTML).join('');
+            }
 
-            tvGrid.innerHTML = tvList.length
-                ? tvList.map(createMediaCardHTML).join('')
-                : `<p class="text-gray-400 text-sm col-span-full py-6">No TV series found for this genre.</p>`;
+            if (tvList && tvList.length) {
+                tvGrid.innerHTML = tvList.map(createMediaCardHTML).join('');
+            }
 
-            if (topGrid && topRatedList) {
-                topGrid.innerHTML = topRatedList.length
-                    ? topRatedList.map(createMediaCardHTML).join('')
-                    : '';
+            if (topGrid && topRatedList && topRatedList.length) {
+                topGrid.innerHTML = topRatedList.map(createMediaCardHTML).join('');
             }
         }
 
@@ -1248,7 +1477,6 @@
                         omdbData.Search.forEach(omdbItem => {
                             if (omdbItem.Type !== 'movie' && omdbItem.Type !== 'series') return;
                             const type = omdbItem.Type === 'series' ? 'tv' : 'movie';
-                            // Avoid duplicates by title + year
                             const alreadyExists = resultsList.some(
                                 existing => existing.title.toLowerCase() === omdbItem.Title.toLowerCase()
                             );
@@ -1363,12 +1591,9 @@
             await loadOmdbMetadata(item);
         }
 
-        // Fetch real TV show seasons from TMDB `/tv/{id}` and real episodes from `/tv/{id}/season/{season}`
         async function loadRealTvDetailsAndSeason(item, seasonNumber) {
             const seasonSelect = document.getElementById('tv-season-select');
-            const epGrid = document.getElementById('episode-buttons-grid');
 
-            // If we only have an IMDB ID (e.g., from OMDb or Direct ID), try resolving TMDB ID first
             if (!item.tmdbId && item.imdbId) {
                 try {
                     const findRes = await fetch(`${TMDB_BASE}/find/${item.imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
@@ -1382,7 +1607,6 @@
             }
 
             if (!item.tmdbId) {
-                // Fallback numeric episode buttons if custom non-TMDB ID
                 seasonSelect.innerHTML = [1, 2, 3, 4, 5].map(s => `<option value="${s}">Season ${s}</option>`).join('');
                 seasonSelect.value = String(seasonNumber);
                 renderFallbackEpisodeButtons(12);
@@ -1390,7 +1614,6 @@
             }
 
             try {
-                // 1. Fetch TV Show Details to get exact seasons list
                 const tvRes = await fetch(`${TMDB_BASE}/tv/${item.tmdbId}?api_key=${TMDB_API_KEY}`);
                 if (tvRes.ok) {
                     const tvData = await tvRes.json();
@@ -1405,7 +1628,6 @@
                     seasonSelect.value = String(seasonNumber);
                 }
 
-                // 2. Fetch Season Episodes from TMDB `/tv/{id}/season/{season_number}`
                 await fetchAndRenderTmdbSeasonEpisodes(item.tmdbId, seasonNumber);
             } catch (err) {
                 console.warn('Error loading TMDB TV season details:', err);
@@ -1493,7 +1715,6 @@
             epGrid.innerHTML = html;
         }
 
-        // Fetch Real OMDb Metadata (`https://www.omdbapi.com/?apikey=c0350149&i=...`)
         async function loadOmdbMetadata(item) {
             const badgesContainer = document.getElementById('omdb-badges');
             const creditsContainer = document.getElementById('omdb-credits');
@@ -1558,14 +1779,6 @@
             }
         }
 
-        /**
-         * Builds the exact vaplayer.ru embed URL according to the documentation:
-         * - Movie: https://vaplayer.ru/embed/movie/{id}
-         * - TV Numeric: https://vaplayer.ru/embed/tv/{id}/{season}/{episode}
-         * - TV SxxExx: https://vaplayer.ru/embed/tv/{id}/S01E01
-         * - TV Dash: https://vaplayer.ru/embed/tv/{id}/{season}-{episode}
-         * - TV Query: https://vaplayer.ru/embed/tv?tmdb={id}&season={season}&episode={episode}
-         */
         function buildEmbedUrl() {
             const item = state.currentMedia;
             if (!item) return '';
@@ -1794,7 +2007,9 @@
         }
 
         function persistRegistry() {
-            localStorage.setItem('cinevault_registry_v2', JSON.stringify(state.mediaRegistry));
+            try {
+                localStorage.setItem('cinevault_registry_v2', JSON.stringify(state.mediaRegistry));
+            } catch (e) {}
         }
 
         function toggleWatchlist(uid) {
@@ -1812,6 +2027,10 @@
             updateHeroBannerUI();
             renderCatalogGrids(state.trendingMovies, state.trendingTv, state.topRatedMovies);
             if (state.activeTab === 'watchlist') renderWatchlist();
+
+            // Sync with Supabase if logged in
+            syncLocalDataToSupabase();
+            updateAuthUI();
         }
 
         function updateWatchlistBadge() {
@@ -1850,15 +2069,20 @@
             const entry = {
                 ...item,
                 season: season || 1,
-                episode: episode || 1
+                episode: episode || 1,
+                updatedAt: Date.now()
             };
             state.mediaRegistry[item.uid] = entry;
             state.recentlyWatched = [
                 entry,
                 ...state.recentlyWatched.filter(r => r.uid !== item.uid)
-            ].slice(0, 8);
+            ].slice(0, 12);
             localStorage.setItem('cinevault_recent_v2', JSON.stringify(state.recentlyWatched));
             persistRegistry();
+
+            // Sync with Supabase if logged in
+            syncLocalDataToSupabase();
+            updateAuthUI();
         }
 
         function renderRecentlyWatched() {
@@ -1890,11 +2114,541 @@
             state.recentlyWatched = [];
             localStorage.removeItem('cinevault_recent_v2');
             renderRecentlyWatched();
+            syncLocalDataToSupabase();
+            updateAuthUI();
             showToast('Watch history cleared');
         }
 
         /**************************************************************
-         * 11. DIRECT ID STREAMER & SETTINGS
+         * 11. SUPABASE AUTHENTICATION, DUPLICATE USERNAME CHECK & CLOUD SYNC
+         **************************************************************/
+        let supabaseClient = null;
+        let realtimeChannel = null;
+        let isApplyingCloudUpdate = false;
+
+        function cleanUsernameFromIdentifier(rawInput) {
+            const trimmed = (rawInput || '').trim().toLowerCase();
+            if (!trimmed) return '';
+            if (trimmed.includes('@')) {
+                return trimmed.split('@')[0].replace(/[^a-z0-9._-]/g, '');
+            }
+            return trimmed.replace(/[^a-z0-9._-]/g, '');
+        }
+
+        function identifierToAuthEmail(rawInput) {
+            const trimmed = (rawInput || '').trim().toLowerCase();
+            if (!trimmed) return '';
+            if (trimmed.includes('@')) return trimmed;
+            const cleanUser = cleanUsernameFromIdentifier(trimmed);
+            return `${cleanUser}@cinevault.local`;
+        }
+
+        function updateUsernamePreview(val) {
+            const badge = document.getElementById('username-norm-preview');
+            const cleanUser = cleanUsernameFromIdentifier(val);
+            if (!cleanUser) {
+                badge.classList.add('hidden');
+                return;
+            }
+            badge.textContent = `Username: @${cleanUser}`;
+            badge.classList.remove('hidden');
+        }
+
+        function initSupabaseAuthAndSync() {
+            try {
+                if (!window.supabase || !window.supabase.createClient) {
+                    console.warn('Supabase CDN script not available.');
+                    return;
+                }
+
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+                    auth: {
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: false,
+                        storageKey: 'cinevault_supabase_auth'
+                    }
+                });
+
+                // 1. Check active persistent session on page load
+                supabaseClient.auth.getSession().then(({ data }) => {
+                    if (data && data.session && data.session.user) {
+                        handleAuthenticatedUser(data.session.user);
+                    }
+                }).catch(err => console.warn('Session check warning:', err));
+
+                // 2. Listen for login / logout / token refresh events
+                supabaseClient.auth.onAuthStateChanged((event, session) => {
+                    if (session && session.user) {
+                        handleAuthenticatedUser(session.user);
+                    } else if (event === 'SIGNED_OUT') {
+                        state.currentUser = null;
+                        if (realtimeChannel && supabaseClient) {
+                            supabaseClient.removeChannel(realtimeChannel);
+                            realtimeChannel = null;
+                        }
+                        updateAuthUI();
+                    }
+                });
+            } catch (e) {
+                console.warn('Supabase initialization error:', e);
+            }
+        }
+
+        async function handleAuthenticatedUser(user) {
+            const metaUsername = user.user_metadata && user.user_metadata.username
+                ? user.user_metadata.username
+                : cleanUsernameFromIdentifier(user.email || 'user');
+
+            const isNewSession = !state.currentUser || state.currentUser.id !== user.id;
+            state.currentUser = {
+                id: user.id,
+                email: user.email,
+                username: metaUsername
+            };
+
+            updateAuthUI();
+
+            if (isNewSession) {
+                await pullAndMergeCloudData();
+                subscribeToUserRealtimeSync(user.id);
+            }
+        }
+
+        function mergeRecentlyWatchedLists(localList = [], cloudList = []) {
+            const map = new Map();
+            [...cloudList, ...localList].forEach(item => {
+                if (!item || !item.uid) return;
+                const prev = map.get(item.uid);
+                if (!prev || (item.updatedAt || 0) >= (prev.updatedAt || 0)) {
+                    map.set(item.uid, item);
+                }
+            });
+            return Array.from(map.values())
+                .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                .slice(0, 12);
+        }
+
+        function mergeWatchlists(localList = [], cloudList = []) {
+            return Array.from(new Set([...localList, ...cloudList]));
+        }
+
+        async function pullAndMergeCloudData() {
+            if (!supabaseClient || !state.currentUser) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('cinevault_sync')
+                    .select('*')
+                    .eq('user_id', state.currentUser.id)
+                    .maybeSingle();
+
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('Supabase pull notice:', error.message);
+                }
+
+                if (data) {
+                    isApplyingCloudUpdate = true;
+                    const cloudWatchlist = Array.isArray(data.watchlist) ? data.watchlist : [];
+                    const cloudRecent = Array.isArray(data.recently_watched) ? data.recently_watched : [];
+                    const cloudRegistry = (data.media_registry && typeof data.media_registry === 'object') ? data.media_registry : {};
+
+                    if (data.username) {
+                        state.currentUser.username = data.username;
+                    }
+
+                    Object.assign(state.mediaRegistry, cloudRegistry);
+                    state.recentlyWatched = mergeRecentlyWatchedLists(state.recentlyWatched, cloudRecent);
+                    state.watchlist = mergeWatchlists(state.watchlist, cloudWatchlist);
+
+                    state.recentlyWatched.forEach(item => {
+                        if (item && item.uid) state.mediaRegistry[item.uid] = item;
+                    });
+
+                    localStorage.setItem('cinevault_watchlist_v2', JSON.stringify(state.watchlist));
+                    localStorage.setItem('cinevault_recent_v2', JSON.stringify(state.recentlyWatched));
+                    persistRegistry();
+
+                    updateWatchlistBadge();
+                    renderRecentlyWatched();
+                    updateHeroBannerUI();
+                    renderCatalogGrids(state.trendingMovies, state.trendingTv, state.topRatedMovies);
+                    if (state.activeTab === 'watchlist') renderWatchlist();
+                    updateAuthUI();
+                    isApplyingCloudUpdate = false;
+                }
+
+                // Upsert merged progress back to Supabase so guest items are saved in the cloud
+                await syncLocalDataToSupabase();
+            } catch (err) {
+                isApplyingCloudUpdate = false;
+                console.warn('Cloud merge warning:', err);
+            }
+        }
+
+        async function syncLocalDataToSupabase() {
+            if (isApplyingCloudUpdate || !supabaseClient || !state.currentUser) return;
+
+            try {
+                // Keep only registry items referenced by watchlist or recentlyWatched to keep payload lean
+                const compactRegistry = {};
+                state.watchlist.forEach(uid => {
+                    if (state.mediaRegistry[uid]) compactRegistry[uid] = state.mediaRegistry[uid];
+                });
+                state.recentlyWatched.forEach(item => {
+                    if (item && item.uid) compactRegistry[item.uid] = item;
+                });
+
+                const payload = {
+                    user_id: state.currentUser.id,
+                    username: state.currentUser.username,
+                    watchlist: state.watchlist,
+                    recently_watched: state.recentlyWatched,
+                    media_registry: compactRegistry,
+                    updated_at: new Date().toISOString()
+                };
+
+                const { error } = await supabaseClient
+                    .from('cinevault_sync')
+                    .upsert(payload, { onConflict: 'user_id' });
+
+                if (error) {
+                    console.warn('Supabase upsert warning:', error.message);
+                }
+            } catch (e) {
+                console.warn('Supabase sync error:', e);
+            }
+        }
+
+        function subscribeToUserRealtimeSync(userId) {
+            if (!supabaseClient || !userId) return;
+            if (realtimeChannel) {
+                supabaseClient.removeChannel(realtimeChannel);
+                realtimeChannel = null;
+            }
+
+            try {
+                realtimeChannel = supabaseClient
+                    .channel(`cinevault_sync_${userId}`)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: '*',
+                            schema: 'public',
+                            table: 'cinevault_sync',
+                            filter: `user_id=eq.${userId}`
+                        },
+                        payload => {
+                            const row = payload.new;
+                            if (!row) return;
+                            isApplyingCloudUpdate = true;
+
+                            const cloudWatchlist = Array.isArray(row.watchlist) ? row.watchlist : [];
+                            const cloudRecent = Array.isArray(row.recently_watched) ? row.recently_watched : [];
+                            const cloudRegistry = (row.media_registry && typeof row.media_registry === 'object') ? row.media_registry : {};
+
+                            Object.assign(state.mediaRegistry, cloudRegistry);
+                            state.watchlist = cloudWatchlist;
+                            state.recentlyWatched = cloudRecent;
+
+                            state.recentlyWatched.forEach(item => {
+                                if (item && item.uid) state.mediaRegistry[item.uid] = item;
+                            });
+
+                            localStorage.setItem('cinevault_watchlist_v2', JSON.stringify(state.watchlist));
+                            localStorage.setItem('cinevault_recent_v2', JSON.stringify(state.recentlyWatched));
+                            persistRegistry();
+
+                            updateWatchlistBadge();
+                            renderRecentlyWatched();
+                            updateHeroBannerUI();
+                            renderCatalogGrids(state.trendingMovies, state.trendingTv, state.topRatedMovies);
+                            if (state.activeTab === 'watchlist') renderWatchlist();
+                            updateAuthUI();
+
+                            isApplyingCloudUpdate = false;
+                        }
+                    )
+                    .subscribe();
+            } catch (e) {
+                console.warn('Realtime subscription notice:', e);
+            }
+        }
+
+        /**
+         * Checks if a username already exists before allowing account creation:
+         * 1. Queries `public.cinevault_sync` for a matching `username` (case-insensitive).
+         * 2. Checks local known usernames cache on the device.
+         */
+        async function checkUsernameAlreadyExists(cleanUsername) {
+            const knownUsers = JSON.parse(localStorage.getItem('cinevault_known_usernames') || '[]');
+            if (knownUsers.includes(cleanUsername.toLowerCase())) {
+                return true;
+            }
+
+            if (!supabaseClient) return false;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('cinevault_sync')
+                    .select('username')
+                    .ilike('username', cleanUsername)
+                    .maybeSingle();
+
+                if (!error && data && data.username) {
+                    return true;
+                }
+            } catch (e) {}
+
+            return false;
+        }
+
+        function recordKnownUsername(cleanUsername) {
+            try {
+                const knownUsers = JSON.parse(localStorage.getItem('cinevault_known_usernames') || '[]');
+                if (!knownUsers.includes(cleanUsername.toLowerCase())) {
+                    knownUsers.push(cleanUsername.toLowerCase());
+                    localStorage.setItem('cinevault_known_usernames', JSON.stringify(knownUsers));
+                }
+            } catch (e) {}
+        }
+
+        async function submitAuthForm() {
+            hideAuthError();
+            if (!supabaseClient) {
+                showAuthError('Supabase client is not initialized. Please check your connection.');
+                return;
+            }
+
+            const rawIdentifier = document.getElementById('auth-identifier-input').value.trim();
+            const password = document.getElementById('auth-password-input').value;
+            const cleanUsername = cleanUsernameFromIdentifier(rawIdentifier);
+            const email = identifierToAuthEmail(rawIdentifier);
+
+            if (!cleanUsername || cleanUsername.length < 2) {
+                showAuthError('Please enter a valid username (at least 2 characters).');
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                showAuthError('Password must be at least 6 characters.');
+                return;
+            }
+
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const submitLabel = document.getElementById('auth-submit-label');
+            const originalLabel = submitLabel.textContent;
+            submitBtn.disabled = true;
+            submitLabel.textContent = state.authMode === 'register' ? 'Checking username & creating...' : 'Signing in...';
+
+            try {
+                if (state.authMode === 'register') {
+                    // STEP 1: Check if username already exists in cinevault_sync or local registry
+                    const exists = await checkUsernameAlreadyExists(cleanUsername);
+                    if (exists) {
+                        throw new Error(`Username "@${cleanUsername}" already exists! Please choose a different username.`);
+                    }
+
+                    // STEP 2: Attempt Supabase Auth Sign Up with the normalized username email
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                username: cleanUsername
+                            }
+                        }
+                    });
+
+                    if (error) {
+                        const msg = (error.message || '').toLowerCase();
+                        if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('unique')) {
+                            recordKnownUsername(cleanUsername);
+                            throw new Error(`Username "@${cleanUsername}" already exists! Please choose a different username.`);
+                        }
+                        throw error;
+                    }
+
+                    // Supabase returns an empty identities array if the email/username is already registered
+                    if (data && data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                        recordKnownUsername(cleanUsername);
+                        throw new Error(`Username "@${cleanUsername}" already exists! Please choose a different username.`);
+                    }
+
+                    // STEP 3: If user is created, verify we can insert their unique username into cinevault_sync
+                    if (data && data.user) {
+                        recordKnownUsername(cleanUsername);
+                        await handleAuthenticatedUser(data.user);
+                        document.getElementById('auth-password-input').value = '';
+                        showToast(`Account @${cleanUsername} created & synced!`);
+                    }
+                } else {
+                    // SIGN IN MODE
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) {
+                        const msg = (error.message || '').toLowerCase();
+                        if (msg.includes('invalid login credentials')) {
+                            throw new Error('Invalid username/email or password. Please try again.');
+                        }
+                        throw error;
+                    }
+
+                    if (data && data.user) {
+                        recordKnownUsername(cleanUsername);
+                        await handleAuthenticatedUser(data.user);
+                        document.getElementById('auth-password-input').value = '';
+                        showToast(`Welcome back, @${state.currentUser.username}!`);
+                    }
+                }
+            } catch (err) {
+                showAuthError(err.message || 'Authentication failed. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitLabel.textContent = originalLabel;
+            }
+        }
+
+        async function forceCloudSyncNow() {
+            if (!state.currentUser) return;
+            await pullAndMergeCloudData();
+            showToast('Synced with Supabase Cloud!');
+        }
+
+        async function handleAccountLogout() {
+            if (!supabaseClient) return;
+            try {
+                await supabaseClient.auth.signOut();
+                state.currentUser = null;
+                updateAuthUI();
+                closeAuthModal();
+                showToast('Logged out. You are now browsing in Guest mode.');
+            } catch (e) {
+                showToast('Error signing out.');
+            }
+        }
+
+        function openAuthModal() {
+            hideAuthError();
+            updateAuthUI();
+            document.getElementById('auth-modal').classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function setAuthModalMode(mode) {
+            state.authMode = mode;
+            hideAuthError();
+            const loginTab = document.getElementById('auth-tab-login');
+            const regTab = document.getElementById('auth-tab-register');
+            const submitLabel = document.getElementById('auth-submit-label');
+
+            if (mode === 'login') {
+                loginTab.className = 'py-2 rounded-lg text-xs sm:text-sm font-semibold bg-brand-500 text-white transition';
+                regTab.className = 'py-2 rounded-lg text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition';
+                submitLabel.textContent = 'Sign In & Sync Devices';
+            } else {
+                regTab.className = 'py-2 rounded-lg text-xs sm:text-sm font-semibold bg-brand-500 text-white transition';
+                loginTab.className = 'py-2 rounded-lg text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition';
+                submitLabel.textContent = 'Create Account & Sync';
+            }
+        }
+
+        function toggleAuthPasswordVisibility() {
+            const pwInput = document.getElementById('auth-password-input');
+            const eye = document.getElementById('auth-pw-eye');
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                eye.className = 'fa-regular fa-eye-slash';
+            } else {
+                pwInput.type = 'password';
+                eye.className = 'fa-regular fa-eye';
+            }
+        }
+
+        function showAuthError(message) {
+            const box = document.getElementById('auth-error-box');
+            const text = document.getElementById('auth-error-text');
+            text.textContent = message;
+            box.classList.remove('hidden');
+        }
+
+        function hideAuthError() {
+            const box = document.getElementById('auth-error-box');
+            if (box) box.classList.add('hidden');
+        }
+
+        function updateAuthUI() {
+            const loggedOutView = document.getElementById('auth-logged-out-view');
+            const loggedInView = document.getElementById('auth-logged-in-view');
+
+            const dLabel = document.getElementById('desktop-header-auth-label');
+            const dDot = document.getElementById('desktop-auth-dot');
+            const dIcon = document.getElementById('desktop-auth-icon');
+
+            const mHeaderLabel = document.getElementById('mobile-header-auth-label');
+            const mHeaderDot = document.getElementById('mobile-auth-dot');
+
+            const mNavLabel = document.getElementById('mnav-account-label');
+            const mNavDot = document.getElementById('mobile-cloud-dot');
+
+            const cwBadge = document.getElementById('continue-watching-sync-badge');
+
+            if (state.currentUser && state.currentUser.username) {
+                const uname = state.currentUser.username;
+                loggedOutView.classList.add('hidden');
+                loggedInView.classList.remove('hidden');
+
+                document.getElementById('profile-avatar').textContent = uname.charAt(0).toUpperCase();
+                document.getElementById('profile-username').textContent = `@${uname}`;
+                document.getElementById('profile-email').textContent = state.currentUser.email || '';
+                document.getElementById('profile-uid-display').textContent = `User ID: ${state.currentUser.id}`;
+                document.getElementById('profile-login-hint').textContent = `@${uname}`;
+                document.getElementById('profile-recent-count').textContent = String(state.recentlyWatched.length);
+                document.getElementById('profile-watchlist-count').textContent = String(state.watchlist.length);
+
+                if (dLabel) dLabel.textContent = `@${uname}`;
+                if (dDot) dDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+                if (dIcon) dIcon.className = 'fa-solid fa-cloud-check text-emerald-400';
+
+                if (mHeaderLabel) mHeaderLabel.textContent = `@${uname}`;
+                if (mHeaderDot) mHeaderDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+
+                if (mNavLabel) mNavLabel.textContent = `@${uname}`;
+                if (mNavDot) mNavDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse absolute top-1 right-2.5';
+
+                if (cwBadge) {
+                    cwBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Synced • @${uname}`;
+                    cwBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 transition';
+                }
+            } else {
+                loggedOutView.classList.remove('hidden');
+                loggedInView.classList.add('hidden');
+
+                if (dLabel) dLabel.textContent = 'Login';
+                if (dDot) dDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+                if (dIcon) dIcon.className = 'fa-regular fa-user text-brand-400';
+
+                if (mHeaderLabel) mHeaderLabel.textContent = 'Login';
+                if (mHeaderDot) mHeaderDot.className = 'w-2 h-2 rounded-full bg-amber-400';
+
+                if (mNavLabel) mNavLabel.textContent = 'Account';
+                if (mNavDot) mNavDot.className = 'w-2 h-2 rounded-full bg-amber-400 absolute top-1 right-2.5';
+
+                if (cwBadge) {
+                    cwBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Guest Device (Tap to Sync)`;
+                    cwBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 flex items-center gap-1.5 transition';
+                }
+            }
+        }
+
+        /**************************************************************
+         * 12. DIRECT ID STREAMER & SETTINGS
          **************************************************************/
         function openDirectPlayModal() {
             document.getElementById('direct-play-modal').classList.remove('hidden');
@@ -1941,7 +2695,6 @@
                 description: `Streaming ${rawId} via vaplayer.ru embed API.`
             };
 
-            // Enrich title and poster from TMDB / OMDb automatically
             try {
                 if (isImdb) {
                     const omdbRes = await fetch(`${OMDB_BASE}?apikey=${OMDB_API_KEY}&i=${encodeURIComponent(rawId)}`);
@@ -2000,7 +2753,7 @@
         }
 
         /**************************************************************
-         * 12. CLIPBOARD & TOAST UTILITIES
+         * 13. CLIPBOARD & TOAST UTILITIES
          **************************************************************/
         function copyTextToClipboard(text) {
             const textarea = document.createElement('textarea');
