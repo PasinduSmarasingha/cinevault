@@ -1,0 +1,17 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 0 */3 * *' # Runs at midnight UTC every 3 days
+  workflow_dispatch:      # Lets you test it manually with 1 click
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping CineVault Supabase Table
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            "https://skfbbyazwskirebvgcwd.supabase.co/rest/v1/cinevault_sync?select=username&limit=1" \
+            -H "apikey: sb_publishable_2XSFZKrPULCggn-jYQ8YvA_eeCukJCt" \
+            -H "Authorization: Bearer sb_publishable_2XSFZKrPULCggn-jYQ8YvA_eeCukJCt"
