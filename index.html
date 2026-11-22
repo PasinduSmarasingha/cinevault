@@ -318,7 +318,7 @@
             </div>
         </section>
 
-        <!-- CONTINUE WATCHING / RECENTLY PLAYED -->
+        <!-- CONTINUE WATCHING / RECENTLY PLAYED (With Progress Bar & Resume Timestamp Badge) -->
         <section id="recently-watched-section" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 sm:pt-8 hidden">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3.5">
                 <div class="flex flex-wrap items-center gap-2.5">
@@ -363,7 +363,7 @@
                             <span class="w-1.5 h-6 rounded-full bg-brand-500 inline-block"></span>
                             Trending Movies This Week
                         </h2>
-                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Live from TMDB • Instant stream via <code class="text-rose-400">/embed/movie/{id}</code></p>
+                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Live from TMDB • Multi-server playback via <code class="text-rose-400">vidrift.net</code>, <code class="text-emerald-400">vidy.st</code> & <code class="text-gray-300">vaplayer.ru</code></p>
                     </div>
                 </div>
                 <div id="movies-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
@@ -377,7 +377,7 @@
                             <span class="w-1.5 h-6 rounded-full bg-amber-500 inline-block"></span>
                             Trending TV Series This Week
                         </h2>
-                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Live from TMDB • Real Seasons & Episodes via <code class="text-amber-400">/embed/tv/{id}/{season}/{episode}</code></p>
+                        <p class="text-[11px] sm:text-xs text-gray-400 mt-0.5">Live from TMDB • Real Seasons, Auto-Next Episodes & Cloud Timestamp Resume</p>
                     </div>
                 </div>
                 <div id="tv-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"></div>
@@ -442,13 +442,13 @@
     </nav>
 
     <!-- =========================================================
-         VIDEO PLAYER MODAL (With Real TMDB Seasons/Episodes & OMDb Info)
+         VIDEO PLAYER MODAL (VidRift + Vidy + VAPlayer Switcher, Live Timestamp Sync & TMDB/OMDb Info)
          ========================================================= -->
     <div id="player-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/90 backdrop-blur-xl transition-opacity">
         <div class="min-h-screen px-2.5 sm:px-6 py-4 sm:py-6 flex flex-col justify-start max-w-6xl mx-auto">
 
             <!-- Top Controls Bar -->
-            <div class="flex flex-wrap items-center justify-between gap-2.5 mb-3 sm:mb-4 bg-dark-900/95 border border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl">
+            <div class="flex flex-wrap items-center justify-between gap-2.5 mb-3 bg-dark-900/95 border border-white/10 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl">
                 <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                     <button onclick="closePlayerModal()" class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-xl bg-white/10 hover:bg-brand-500 text-white flex items-center justify-center transition" title="Close Player">
                         <i class="fa-solid fa-arrow-left text-sm"></i>
@@ -462,10 +462,10 @@
                     </div>
                 </div>
 
-                <!-- Right Controls: ID Mode Switcher, Lights Off & Close -->
+                <!-- Right Controls: VAPlayer ID Mode Switcher, Lights Off & Close -->
                 <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    <!-- Switch between TMDB ID and IMDB ID -->
-                    <div class="flex items-center bg-dark-800 p-0.5 sm:p-1 rounded-xl border border-white/10 text-[11px] sm:text-xs">
+                    <!-- VAPlayer-only: Switch between TMDB ID and IMDB ID -->
+                    <div id="vaplayer-id-switcher" class="hidden flex items-center bg-dark-800 p-0.5 sm:p-1 rounded-xl border border-white/10 text-[11px] sm:text-xs">
                         <button id="id-mode-tmdb" onclick="setPlayerIdMode('tmdb')" class="px-2 sm:px-2.5 py-1 rounded-lg font-semibold bg-brand-500 text-white transition">
                             TMDB
                         </button>
@@ -486,13 +486,399 @@
                 </div>
             </div>
 
+            <!-- MULTI-SERVER / API SWITCHER & LIVE SYNC CONTROLS BAR -->
+            <div class="mb-3 bg-dark-900/95 border border-white/10 rounded-2xl px-3 sm:px-4 py-2.5 flex flex-col gap-2.5">
+                <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
+                    <!-- 3-Server Switcher Buttons -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mr-0.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-server text-brand-500"></i> Server:
+                        </span>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <button
+                                id="server-btn-vidrift"
+                                onclick="switchStreamingProvider('vidrift')"
+                                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500 text-white border border-brand-400/50 shadow-md shadow-brand-500/25 flex items-center gap-1.5 sm:gap-2 transition active:scale-95"
+                            >
+                                <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                                <span>Server 1: VidRift</span>
+                                <span data-server-badge class="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-white/20 text-white">Custom + Sync</span>
+                            </button>
+                            <button
+                                id="server-btn-vidy"
+                                onclick="switchStreamingProvider('vidy')"
+                                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 border border-white/10 flex items-center gap-1.5 sm:gap-2 transition active:scale-95"
+                            >
+                                <i class="fa-solid fa-bolt text-[11px]"></i>
+                                <span>Server 2: Vidy</span>
+                                <span data-server-badge class="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-white/10 text-gray-300">Autoplay + Sync</span>
+                            </button>
+                            <button
+                                id="server-btn-vaplayer"
+                                onclick="switchStreamingProvider('vaplayer')"
+                                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 border border-white/10 flex items-center gap-1.5 sm:gap-2 transition active:scale-95"
+                            >
+                                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-[11px]"></i>
+                                <span>Server 3: VAPlayer</span>
+                                <span data-server-badge class="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-300 border border-amber-500/30">Ads / 18+</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Provider-Specific Controls + Shared Timestamp Sync Controls -->
+                    <div id="sync-controls-group" class="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-2 xl:pt-0 border-t xl:border-t-0 border-white/10">
+                        <!-- VidRift-Only: Customize Player Toggle -->
+                        <button
+                            id="vidrift-customize-toggle"
+                            onclick="toggleVidriftCustomizer()"
+                            title="Customize VidRift branding, colors, subtitles, layout & controls"
+                            class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-brand-500/15 text-brand-300 border border-brand-500/35 hover:bg-brand-500/25 flex items-center gap-1.5 transition"
+                        >
+                            <i class="fa-solid fa-sliders text-[10px]"></i>
+                            <span>Customize Player</span>
+                            <i id="vidrift-customize-chevron" class="fa-solid fa-chevron-down text-[9px] transition-transform"></i>
+                        </button>
+
+                        <!-- Vidy-Only: Autoplay & Auto-Next Toggles -->
+                        <div id="vidy-only-toggles" class="hidden flex flex-wrap items-center gap-1.5">
+                            <button
+                                id="vidy-autoplay-toggle"
+                                onclick="toggleVidyAutoplay()"
+                                title="Start playback automatically with sound on Vidy"
+                                class="px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1.5 transition"
+                            >
+                                <i class="fa-solid fa-play text-[10px]"></i>
+                                <span id="vidy-autoplay-label">Autoplay: ON</span>
+                            </button>
+
+                            <button
+                                id="vidy-autonext-toggle"
+                                onclick="toggleVidyAutoNext()"
+                                title="Automatically continue to the next episode when current finishes"
+                                class="hidden px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1.5 transition"
+                            >
+                                <i class="fa-solid fa-forward-step text-[10px]"></i>
+                                <span id="vidy-autonext-label">Auto-Next Ep: ON</span>
+                            </button>
+                        </div>
+
+                        <!-- Shared Live Timestamp Status Pill (VidRift + Vidy) -->
+                        <div id="player-timestamp-pill" class="px-2.5 py-1.5 rounded-xl bg-dark-800 border border-white/10 text-[11px] font-mono text-gray-200 flex items-center gap-1.5">
+                            <span id="player-sync-pulse" class="w-1.5 h-1.5 rounded-full bg-brand-500"></span>
+                            <span id="player-timestamp-text">Saved: 0:00</span>
+                        </div>
+
+                        <!-- Shared Start Over (0:00) Button -->
+                        <button
+                            id="player-startover-btn"
+                            onclick="resetCurrentPlaybackProgress()"
+                            title="Reset saved timestamp and play from 0:00"
+                            class="px-2.5 py-1.5 rounded-xl bg-dark-800 hover:bg-rose-500/20 text-gray-300 hover:text-rose-300 border border-white/10 hover:border-rose-500/30 text-[11px] font-semibold flex items-center gap-1 transition"
+                        >
+                            <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                            <span>Start Over (0:00)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLLAPSIBLE VIDRIFT PLAYER CUSTOMIZATION PANEL -->
+            <div id="vidrift-customizer-panel" class="hidden mb-3 bg-dark-900/95 border border-brand-500/30 rounded-2xl p-3.5 sm:p-5 space-y-4 shadow-xl shadow-brand-500/5">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-xl bg-brand-500/20 border border-brand-500/35 text-brand-400 flex items-center justify-center">
+                            <i class="fa-solid fa-palette text-xs"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-display font-bold text-sm sm:text-base text-white">Customize VidRift Player</h4>
+                            <p class="text-[11px] text-gray-400">Personalize branding, theme, typography, subtitles & visible controls (saved automatically)</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleVidriftCustomizer()" class="text-xs text-gray-400 hover:text-white px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                        <i class="fa-solid fa-xmark mr-1"></i>Hide
+                    </button>
+                </div>
+
+                <!-- Customization Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Column 1: Branding -->
+                    <div class="space-y-3 bg-dark-800/50 border border-white/10 rounded-xl p-3.5">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-brand-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-signature"></i> Branding
+                        </p>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1">Brand Name (max 28 chars)</label>
+                            <input
+                                id="vr-brand"
+                                type="text"
+                                maxlength="28"
+                                placeholder="CineVault"
+                                oninput="updateVidriftPref('brand', this.value)"
+                                class="w-full px-3 py-1.5 rounded-lg bg-dark-900 border border-white/15 text-xs text-white focus:outline-none focus:border-brand-500"
+                            >
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1">Accent Color (6-digit Hex)</label>
+                            <div class="flex items-center gap-1.5 mb-2 flex-wrap" id="vr-color-swatches"></div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-mono text-gray-400">#</span>
+                                <input
+                                    id="vr-brand-color"
+                                    type="text"
+                                    maxlength="6"
+                                    placeholder="E11D48"
+                                    oninput="updateVidriftPref('brandColor', this.value)"
+                                    class="flex-1 px-2.5 py-1.5 rounded-lg bg-dark-900 border border-white/15 text-xs font-mono uppercase text-white focus:outline-none focus:border-brand-500"
+                                >
+                                <span id="vr-color-preview" class="w-7 h-7 rounded-lg border border-white/20 shrink-0" style="background-color: #E11D48;"></span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1">Custom Logo URL (Optional HTTPS)</label>
+                            <input
+                                id="vr-brand-logo"
+                                type="url"
+                                placeholder="https://example.com/logo.png"
+                                oninput="updateVidriftPref('brandLogo', this.value)"
+                                class="w-full px-3 py-1.5 rounded-lg bg-dark-900 border border-white/15 text-xs text-white focus:outline-none focus:border-brand-500"
+                            >
+                            <label class="mt-2 flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
+                                <input id="vr-watermark" type="checkbox" onchange="updateVidriftPref('watermark', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                                <span>Show Logo Watermark (<code class="text-[10px] text-gray-400">watermark=1</code>)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Look & Typography -->
+                    <div class="space-y-3 bg-dark-800/50 border border-white/10 rounded-xl p-3.5">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-font"></i> Look & Typography
+                        </p>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1.5">UI Scale (<code class="text-[10px] text-gray-400">uiScale</code>)</label>
+                            <div class="grid grid-cols-4 gap-1.5" id="vr-scale-buttons">
+                                <button type="button" data-scale="0.85" onclick="selectVidriftScale('0.85')" class="vr-scale-btn py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 transition">0.85x</button>
+                                <button type="button" data-scale="1" onclick="selectVidriftScale('1')" class="vr-scale-btn py-1.5 rounded-lg text-xs font-semibold bg-brand-500 text-white border border-brand-400 transition">1x</button>
+                                <button type="button" data-scale="1.25" onclick="selectVidriftScale('1.25')" class="vr-scale-btn py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 transition">1.25x</button>
+                                <button type="button" data-scale="1.5" onclick="selectVidriftScale('1.5')" class="vr-scale-btn py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 transition">1.5x</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1">Player Font (<code class="text-[10px] text-gray-400">font</code>)</label>
+                            <select
+                                id="vr-font"
+                                onchange="updateVidriftPref('font', this.value)"
+                                class="w-full px-3 py-1.5 rounded-lg bg-dark-900 border border-white/15 text-xs text-white focus:outline-none focus:border-brand-500"
+                            >
+                                <option value="Space Grotesk">Space Grotesk</option>
+                                <option value="Inter">Inter</option>
+                                <option value="Outfit">Outfit</option>
+                                <option value="Roboto">Roboto</option>
+                                <option value="Poppins">Poppins</option>
+                                <option value="Montserrat">Montserrat</option>
+                                <option value="Bebas Neue">Bebas Neue</option>
+                                <option value="Oswald">Oswald</option>
+                                <option value="Playfair Display">Playfair Display</option>
+                                <option value="IBM Plex Sans">IBM Plex Sans</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1.5">Control Bar Background</label>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button type="button" id="vr-bg-gradient" onclick="updateVidriftPref('controlBg', 'gradient')" class="py-1.5 rounded-lg text-xs font-semibold bg-brand-500 text-white border border-brand-400 transition">Gradient</button>
+                                <button type="button" id="vr-bg-solid" onclick="updateVidriftPref('controlBg', 'solid')" class="py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 transition">Solid</button>
+                            </div>
+                        </div>
+
+                        <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none pt-1">
+                            <input id="vr-caps-off" type="checkbox" onchange="updateVidriftPref('sentenceCase', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                            <span>Sentence-case labels (<code class="text-[10px] text-gray-400">caps=0</code>)</span>
+                        </label>
+                    </div>
+
+                    <!-- Column 3: Playback, Subtitles & Extra Buttons -->
+                    <div class="space-y-3 bg-dark-800/50 border border-white/10 rounded-xl p-3.5 md:col-span-2 lg:col-span-1">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-closed-captioning"></i> Playback & Extras
+                        </p>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-300 mb-1">Default Subtitle Language (<code class="text-[10px] text-gray-400">sub</code>)</label>
+                            <select
+                                id="vr-sub"
+                                onchange="updateVidriftPref('sub', this.value)"
+                                class="w-full px-3 py-1.5 rounded-lg bg-dark-900 border border-white/15 text-xs text-white focus:outline-none focus:border-brand-500"
+                            >
+                                <option value="">Viewer's choice (Default)</option>
+                                <option value="en">English (en)</option>
+                                <option value="si">Sinhala (si)</option>
+                                <option value="es">Spanish (es)</option>
+                                <option value="fr">French (fr)</option>
+                                <option value="de">German (de)</option>
+                                <option value="hi">Hindi (hi)</option>
+                                <option value="ar">Arabic (ar)</option>
+                                <option value="ja">Japanese (ja)</option>
+                                <option value="ko">Korean (ko)</option>
+                                <option value="pt">Portuguese (pt)</option>
+                                <option value="it">Italian (it)</option>
+                                <option value="id">Indonesian (id)</option>
+                                <option value="tr">Turkish (tr)</option>
+                                <option value="ru">Russian (ru)</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2 pt-0.5">
+                            <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
+                                <input id="vr-autoplay" type="checkbox" onchange="updateVidriftPref('autoplay', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                                <span>Autoplay</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
+                                <input id="vr-muted" type="checkbox" onchange="updateVidriftPref('muted', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                                <span>Start Muted</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
+                                <input id="vr-show-title" type="checkbox" onchange="updateVidriftPref('showTitle', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                                <span>Show Title</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none">
+                                <input id="vr-download" type="checkbox" onchange="updateVidriftPref('download', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                                <span>Download Btn</span>
+                            </label>
+                            <label class="flex items-center gap-2 text-xs text-gray-300 cursor-pointer select-none col-span-2">
+                                <input id="vr-exit" type="checkbox" onchange="updateVidriftPref('exit', this.checked)" class="rounded bg-dark-900 border-white/20 accent-brand-500">
+                                <span>In-Player Back/Exit Arrow (<code class="text-[10px] text-gray-400">exit=1</code>)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hide Controls Chips -->
+                <div class="bg-dark-800/40 border border-white/10 rounded-xl p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-gray-300">
+                            Hide Specific Controls (<code class="text-brand-400">hide=...</code>)
+                        </span>
+                        <span id="vr-hidden-count" class="text-[10px] text-gray-400">0 hidden</span>
+                    </div>
+                    <div id="vr-hide-chips" class="flex flex-wrap gap-1.5"></div>
+                </div>
+
+                <!-- Customizer Footer Actions -->
+                <div class="flex flex-wrap items-center justify-end gap-2.5 pt-2 border-t border-white/10">
+                    <button
+                        type="button"
+                        onclick="resetVidriftPrefs()"
+                        class="px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 transition"
+                    >
+                        <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+                    </button>
+                    <button
+                        type="button"
+                        onclick="applyVidriftPrefs()"
+                        class="px-4 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs font-semibold text-white shadow-lg shadow-brand-500/25 flex items-center gap-1.5 transition"
+                    >
+                        <i class="fa-solid fa-check"></i> Apply &amp; Reload Player
+                    </button>
+                </div>
+            </div>
+
+            <!-- PERSISTENT VAPLAYER AD & 18+ CONTENT WARNING BANNER -->
+            <div id="vaplayer-warning-banner" class="hidden mb-3 bg-gradient-to-r from-amber-500/15 via-rose-500/15 to-amber-500/10 border border-amber-500/35 rounded-2xl px-3.5 sm:px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div class="flex items-start gap-2.5 sm:gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                        <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                    </div>
+                    <p class="text-xs sm:text-[13px] text-amber-100/95 leading-relaxed">
+                        <strong class="text-amber-300 font-bold">Ad &amp; 18+ Content Warning (VAPlayer):</strong>
+                        This server displays third-party pop-up ads and some ads may contain adult-only (18+) content. Please use an Ad Blocker (e.g., <strong class="text-white">uBlock Origin</strong>, <strong class="text-white">Brave Browser</strong>, or <strong class="text-white">AdGuard DNS</strong>) before watching on VAPlayer, or switch to a cleaner server.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0 pl-10 lg:pl-0">
+                    <button
+                        onclick="switchStreamingProvider('vidrift')"
+                        class="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-md shadow-brand-500/25 flex items-center gap-1.5 transition"
+                    >
+                        <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Switch to VidRift
+                    </button>
+                    <button
+                        onclick="switchStreamingProvider('vidy')"
+                        class="px-3 py-1.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/15 text-gray-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                    >
+                        <i class="fa-solid fa-bolt text-emerald-400 text-[10px]"></i> Switch to Vidy
+                    </button>
+                </div>
+            </div>
+
             <!-- 16:9 Video Iframe Wrapper -->
             <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl shadow-brand-500/10 border border-white/15">
                 <div id="iframe-loader" class="absolute inset-0 flex flex-col items-center justify-center bg-dark-950 z-0 p-4 text-center">
                     <div class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p class="text-xs text-gray-300">Connecting stream (<span id="loader-url-preview" class="text-brand-400 font-mono break-all">vaplayer.ru</span>)...</p>
+                    <p class="text-xs text-gray-300">Connecting stream (<span id="loader-url-preview" class="text-brand-400 font-mono break-all">embed.vidrift.net</span>)...</p>
                 </div>
 
+                <!-- PRE-LOAD VAPLAYER SAFETY GATE OVERLAY (Blocks vaplayer.ru until acknowledged) -->
+                <div id="vaplayer-gate-overlay" class="hidden absolute inset-0 z-20 bg-dark-950/95 backdrop-blur-md overflow-y-auto p-3 sm:p-6 flex items-center justify-center">
+                    <div class="max-w-lg w-full bg-dark-900/95 border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-3 sm:space-y-4 my-auto text-center">
+                        <div class="w-11 h-11 sm:w-14 sm:h-14 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500/25 to-rose-500/25 border border-amber-500/45 text-amber-400 flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-shield-halved text-xl sm:text-2xl"></i>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/35">
+                                <i class="fa-solid fa-triangle-exclamation"></i> 18+ / Pop-Up Ad Notice
+                            </span>
+                            <h4 class="font-display font-extrabold text-sm sm:text-xl text-white">
+                                Ad Blocker Recommended — Adult (18+) Ads Warning
+                            </h4>
+                            <p class="text-[11px] sm:text-xs text-gray-300 leading-relaxed">
+                                <strong class="text-white">Server 3 (VAPlayer)</strong> injects third-party intrusive pop-ups and potentially explicit/adult-only (18+) advertisements. We strongly recommend using <strong class="text-amber-300">uBlock Origin</strong>, <strong class="text-amber-300">Brave Browser</strong>, or <strong class="text-amber-300">AdGuard DNS</strong>—or switching to a cleaner server below.
+                            </p>
+                        </div>
+
+                        <!-- Clean Server Switch Buttons -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                            <button
+                                type="button"
+                                onclick="switchStreamingProvider('vidrift')"
+                                class="py-2.5 px-3.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold shadow-lg shadow-brand-500/25 flex items-center justify-center gap-1.5 transition"
+                            >
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Switch to VidRift
+                            </button>
+                            <button
+                                type="button"
+                                onclick="switchStreamingProvider('vidy')"
+                                class="py-2.5 px-3.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/15 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                            >
+                                <i class="fa-solid fa-bolt text-emerald-400"></i> Switch to Vidy
+                            </button>
+                        </div>
+
+                        <!-- Session Checkbox + Continue Button -->
+                        <div class="pt-2 border-t border-white/10 space-y-2.5">
+                            <label class="inline-flex items-center justify-center gap-2 text-[11px] sm:text-xs text-gray-300 cursor-pointer select-none">
+                                <input id="vaplayer-ack-checkbox" type="checkbox" class="rounded bg-dark-800 border-white/25 accent-amber-500">
+                                <span>Don't show this warning again during this browser session</span>
+                            </label>
+
+                            <button
+                                type="button"
+                                onclick="confirmVaplayerAccess()"
+                                class="w-full py-2.5 px-4 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/45 text-amber-200 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition"
+                            >
+                                <i class="fa-solid fa-shield-check"></i>
+                                <span>I Have an Ad Blocker — Continue to VAPlayer</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NOTE: No sandbox attribute per VidRift docs (sandbox breaks playback) -->
                 <iframe
                     id="video-iframe"
                     src=""
@@ -500,24 +886,37 @@
                     height="100%"
                     frameborder="0"
                     allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="encrypted-media; autoplay *; fullscreen *"
+                    onload="handleIframeLoad()"
                     class="relative z-10 w-full h-full"
                 ></iframe>
             </div>
 
-            <!-- TV SHOW SEASON & REAL TMDB EPISODE SELECTOR (Only for TV Series) -->
+            <!-- TV SHOW SEASON & REAL TMDB EPISODE SELECTOR (Only for TV Series / Anime) -->
             <div id="tv-controls-panel" class="mt-3 sm:mt-4 bg-dark-900/95 border border-white/10 rounded-2xl p-3.5 sm:p-5 hidden">
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5 pb-3.5 border-b border-white/10">
                     <!-- Season & Episode Controls -->
                     <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                        <div class="flex items-center gap-2">
+                        <div id="tv-season-control-wrap" class="flex items-center gap-2">
                             <label class="text-xs font-semibold uppercase tracking-wider text-gray-400">Season</label>
                             <select id="tv-season-select" onchange="onSeasonChange()" class="bg-dark-800 border border-white/15 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-brand-500"></select>
                         </div>
 
                         <div class="flex items-center gap-2">
                             <label class="text-xs font-semibold uppercase tracking-wider text-gray-400">Ep</label>
-                            <input id="tv-episode-input" type="number" min="1" max="300" value="1" onchange="onEpisodeInputChange(this.value)" class="w-16 sm:w-20 bg-dark-800 border border-white/15 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-brand-500">
+                            <input id="tv-episode-input" type="number" min="1" max="1500" value="1" onchange="onEpisodeInputChange(this.value)" class="w-16 sm:w-20 bg-dark-800 border border-white/15 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-white font-semibold focus:outline-none focus:border-brand-500">
                         </div>
+
+                        <!-- Anime-Only: English Dub Toggle -->
+                        <button
+                            id="player-anime-dub-toggle"
+                            onclick="toggleCurrentAnimeDub()"
+                            class="hidden px-2.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/15 text-xs font-semibold text-gray-300 flex items-center gap-1.5 transition"
+                        >
+                            <i class="fa-solid fa-language text-brand-400"></i>
+                            <span id="player-anime-dub-label">Audio: Sub</span>
+                        </button>
 
                         <div class="flex items-center gap-1.5">
                             <button onclick="stepEpisode(-1)" class="px-2.5 sm:px-3 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/10 text-xs font-medium text-gray-200 transition">
@@ -529,8 +928,8 @@
                         </div>
                     </div>
 
-                    <!-- API URL Format Selector (Numeric, SxxExx, Dash, Query) -->
-                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <!-- VAPlayer-Only: API URL Format Selector (Numeric, SxxExx, Dash, Query) -->
+                    <div id="vaplayer-tv-format-bar" class="hidden flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <span class="text-[11px] text-gray-400 font-medium">Embed Format:</span>
                         <div class="flex flex-wrap gap-1 bg-dark-800 p-1 rounded-xl border border-white/10">
                             <button onclick="setTvUrlFormat('numeric')" data-fmt="numeric" class="tv-fmt-btn px-2 py-1 rounded-lg text-[11px] font-semibold bg-brand-500 text-white transition" title="/embed/tv/{id}/{season}/{episode}">
@@ -577,13 +976,13 @@
             <div class="mt-3 sm:mt-4 bg-dark-900/90 border border-white/10 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div class="space-y-1 w-full sm:w-auto overflow-hidden">
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                            GET Embed Endpoint
+                        <span id="active-provider-badge" class="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            VIDRIFT EMBED
                         </span>
                         <span class="text-xs text-gray-400">Active Player Source</span>
                     </div>
                     <code id="active-embed-url" class="block text-xs sm:text-sm font-mono text-gray-200 truncate select-all">
-                        https://vaplayer.ru/embed/movie/1147301
+                        https://embed.vidrift.net/embed/movie/656908
                     </code>
                 </div>
 
@@ -623,18 +1022,21 @@
             <div class="space-y-3.5">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Content Type</label>
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <button id="direct-type-movie" onclick="setDirectModalType('movie')" class="py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="direct-type-movie" onclick="setDirectModalType('movie')" class="py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-1.5 transition">
                             <i class="fa-solid fa-film"></i> Movie
                         </button>
-                        <button id="direct-type-tv" onclick="setDirectModalType('tv')" class="py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition">
+                        <button id="direct-type-tv" onclick="setDirectModalType('tv')" class="py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-1.5 transition">
                             <i class="fa-solid fa-tv"></i> TV Series
+                        </button>
+                        <button id="direct-type-anime" onclick="setDirectModalType('anime')" class="py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-dragon"></i> <span class="truncate">Anime (AniList)</span>
                         </button>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
+                    <label id="direct-id-label" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">
                         IMDB ID (<code class="text-brand-400">tt...</code>) or TMDB ID (Numeric)
                     </label>
                     <input
@@ -644,7 +1046,7 @@
                         value="tt23779058"
                         class="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500"
                     >
-                    <p class="text-[11px] text-gray-400 mt-1">Doc examples: Movie <code class="text-gray-300">tt23779058</code> / <code class="text-gray-300">1147301</code> • TV <code class="text-gray-300">205715</code> / <code class="text-gray-300">tt13159924</code></p>
+                    <p id="direct-id-hint" class="text-[11px] text-gray-400 mt-1">Doc examples: Movie <code class="text-gray-300">tt23779058</code> / <code class="text-gray-300">656908</code> • TV <code class="text-gray-300">1396</code> / <code class="text-gray-300">205715</code></p>
                 </div>
 
                 <div id="direct-tv-fields" class="grid grid-cols-2 gap-3 hidden">
@@ -656,6 +1058,23 @@
                         <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Episode Number</label>
                         <input id="direct-episode-input" type="number" min="1" value="1" class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500">
                     </div>
+                </div>
+
+                <!-- Anime (AniList) Fields -->
+                <div id="direct-anime-fields" class="space-y-3 hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Episode Number</label>
+                            <input id="direct-anime-episode-input" type="number" min="1" value="1" class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm focus:outline-none focus:border-brand-500">
+                        </div>
+                        <label class="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-xs sm:text-sm text-gray-200 cursor-pointer select-none">
+                            <input id="direct-anime-dub-checkbox" type="checkbox" class="rounded bg-dark-900 border-white/25 accent-brand-500">
+                            <span>English Dub (<code class="text-[11px] text-brand-400">?dub=1</code>)</span>
+                        </label>
+                    </div>
+                    <p class="text-[11px] text-emerald-400/90 flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Streams automatically on Server 1: VidRift (<code class="text-gray-300">/embed/anilist/{id}/{ep}</code>)
+                    </p>
                 </div>
             </div>
 
@@ -813,7 +1232,7 @@
                         <i class="fa-solid fa-laptop-mobile text-brand-400"></i> Cross-Device Sync Active
                     </p>
                     <p class="text-[11px] text-gray-400 leading-relaxed">
-                        Log in with <strong id="profile-login-hint" class="text-gray-200"></strong> on your phone, tablet, or PC to pick up right where you left off.
+                        Log in with <strong id="profile-login-hint" class="text-gray-200"></strong> on your phone, tablet, or PC to pick up right where you left off—including exact VidRift &amp; Vidy timestamps!
                     </p>
                 </div>
 
@@ -839,10 +1258,10 @@
     </div>
 
     <!-- =========================================================
-         SETTINGS & API KEYS MODAL
+         SETTINGS & API KEYS MODAL (With VidRift + Vidy + VAPlayer Config)
          ========================================================= -->
-    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4">
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-dark-900 border border-white/15 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-4 my-8">
             <div class="flex items-center justify-between border-b border-white/10 pb-3.5">
                 <div class="flex items-center gap-2.5">
                     <div class="w-9 h-9 rounded-xl bg-white/10 text-white flex items-center justify-center">
@@ -850,7 +1269,7 @@
                     </div>
                     <div>
                         <h3 class="font-display font-bold text-base sm:text-lg text-white">API & Stream Configuration</h3>
-                        <p class="text-xs text-gray-400">Hardcoded TMDB, OMDb & Supabase keys active</p>
+                        <p class="text-xs text-gray-400">Configure VidRift, Vidy, VAPlayer & view active API keys</p>
                     </div>
                 </div>
                 <button onclick="closeSettingsModal()" class="text-gray-400 hover:text-white p-1">
@@ -859,8 +1278,44 @@
             </div>
 
             <div class="space-y-3.5">
+                <!-- Default Server Selector -->
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Embed Player Base Domain</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Default Streaming Server</label>
+                    <select
+                        id="settings-default-provider"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-white/15 text-white text-sm font-medium focus:outline-none focus:border-brand-500"
+                    >
+                        <option value="vidrift">Server 1: VidRift (embed.vidrift.net) — Customizable + Timestamp Sync</option>
+                        <option value="vidy">Server 2: Vidy (vidy.st) — Autoplay + Timestamp Sync</option>
+                        <option value="vaplayer">Server 3: VAPlayer (vaplayer.ru) — IMDB / TMDB (Has Ads)</option>
+                    </select>
+                </div>
+
+                <!-- VidRift Base URL -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Server 1: VidRift Base URL</label>
+                    <input
+                        id="settings-vidrift-url"
+                        type="text"
+                        value="https://embed.vidrift.net"
+                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm font-mono focus:outline-none focus:border-brand-500"
+                    >
+                </div>
+
+                <!-- Vidy Base URL -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Server 2: Vidy Base URL</label>
+                    <input
+                        id="settings-vidy-url"
+                        type="text"
+                        value="https://www.vidy.st"
+                        class="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-white/15 text-white text-sm font-mono focus:outline-none focus:border-brand-500"
+                    >
+                </div>
+
+                <!-- VAPlayer Base URL -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Server 3: VAPlayer Base URL</label>
                     <input
                         id="settings-base-url"
                         type="text"
@@ -910,7 +1365,7 @@
                     Close
                 </button>
                 <button onclick="saveSettings()" class="px-5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs sm:text-sm font-semibold text-white">
-                    Save Base URL
+                    Save Settings
                 </button>
             </div>
         </div>
@@ -927,12 +1382,12 @@
     <!-- FOOTER -->
     <footer class="border-t border-white/10 bg-dark-950 py-8 mb-14 md:mb-0 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center gap-2.5 flex-wrap justify-center sm:justify-start">
                 <div class="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-rose-400 flex items-center justify-center text-white">
                     <i class="fa-solid fa-play text-[10px] ml-0.5"></i>
                 </div>
                 <span class="font-display font-bold text-white text-base">CineVault</span>
-                <span>• Live Data by TMDB & OMDb • Cloud Sync by Supabase • Player by <code class="text-gray-300">vaplayer.ru</code></span>
+                <span>• Live Data by TMDB & OMDb • Cloud Sync by Supabase • Servers: <code class="text-rose-400">vidrift.net</code>, <code class="text-emerald-400">vidy.st</code> & <code class="text-gray-300">vaplayer.ru</code></span>
             </div>
             <div class="flex flex-wrap items-center gap-4">
                 <button onclick="openAuthModal()" class="hover:text-white transition">Cloud Account</button>
@@ -945,7 +1400,7 @@
     </footer>
 
     <!-- =========================================================
-         APPLICATION JAVASCRIPT (REAL TMDB + OMDB + SUPABASE + VAPLAYER)
+         APPLICATION JAVASCRIPT (TMDB + OMDB + SUPABASE + VIDRIFT + VIDY + VAPLAYER)
          ========================================================= -->
     <script>
         /**************************************************************
@@ -962,6 +1417,60 @@
         const TMDB_IMG_W300 = "https://image.tmdb.org/t/p/w300";
         const TMDB_IMG_ORIG = "https://image.tmdb.org/t/p/original";
         const OMDB_BASE = "https://www.omdbapi.com/";
+        const VIDY_BRAND_COLOR = "E11D48";
+
+        // VidRift Default Customization Preferences & Options
+        const DEFAULT_VIDRIFT_PREFS = {
+            brand: "CineVault",
+            brandColor: "E11D48",
+            brandLogo: "",
+            watermark: false,
+            uiScale: "1",
+            font: "Inter",
+            controlBg: "gradient", // 'gradient' | 'solid'
+            sentenceCase: false,   // true -> caps=0
+            sub: "",               // default subtitle language code
+            autoplay: true,        // false -> autoplay=0
+            muted: false,          // true -> muted=1
+            showTitle: true,       // true -> showTitle=1
+            download: true,        // true -> download=1
+            exit: true,            // true -> exit=1
+            hide: []               // array of hidden control names
+        };
+
+        const VIDRIFT_COLOR_PRESETS = [
+            { hex: "E11D48", name: "CineVault Rose" },
+            { hex: "DC2626", name: "Crimson Red" },
+            { hex: "3B82F6", name: "Ocean Blue" },
+            { hex: "10B981", name: "Emerald" },
+            { hex: "F59E0B", name: "Amber" },
+            { hex: "8B5CF6", name: "Violet" }
+        ];
+
+        const VIDRIFT_HIDE_OPTIONS = [
+            "progress", "play", "volume", "skip", "time", "title", "server",
+            "next", "episodes", "subtitles", "settings", "lock", "pip",
+            "cast", "fullscreen", "gradient", "pausecard"
+        ];
+
+        function loadSavedVidriftPrefs() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem('cinevault_vidrift_prefs') || '{}');
+                return {
+                    ...DEFAULT_VIDRIFT_PREFS,
+                    ...parsed,
+                    hide: Array.isArray(parsed.hide) ? parsed.hide : []
+                };
+            } catch (e) {
+                return { ...DEFAULT_VIDRIFT_PREFS, hide: [] };
+            }
+        }
+
+        function getInitialProvider() {
+            const saved = localStorage.getItem('cinevault_provider');
+            if (saved === 'vidrift' || saved === 'vidy' || saved === 'vaplayer') return saved;
+            return 'vidrift';
+        }
 
         // Official TMDB Genre ID Mapping
         const TMDB_GENRE_MAP = {
@@ -999,15 +1508,37 @@
             mediaRegistry: {}, // uid -> normalized media object
             watchlist: JSON.parse(localStorage.getItem('cinevault_watchlist_v2') || '[]'),
             recentlyWatched: JSON.parse(localStorage.getItem('cinevault_recent_v2') || '[]'),
+
+            // Multi-Server Streaming Providers (Default: VidRift)
+            activeProvider: getInitialProvider(), // 'vidrift' | 'vidy' | 'vaplayer'
+            vidriftBaseUrl: localStorage.getItem('cinevault_vidrift_url') || 'https://embed.vidrift.net',
+            vidyBaseUrl: localStorage.getItem('cinevault_vidy_url') || 'https://www.vidy.st',
             baseUrl: localStorage.getItem('cinevault_base_url') || 'https://vaplayer.ru',
+            vidyAutoplay: localStorage.getItem('cinevault_vidy_autoplay') !== 'false',
+            vidyAutoNext: localStorage.getItem('cinevault_vidy_autonext') !== 'false',
+            vidriftPrefs: loadSavedVidriftPrefs(),
+            vidriftCustomizerOpen: false,
+
             // Player Modal State
             currentMedia: null,
-            playerIdMode: 'tmdb', // 'tmdb' or 'imdb'
+            playerIdMode: 'tmdb', // 'tmdb' or 'imdb' (VAPlayer only)
             tvSeason: 1,
             tvEpisode: 1,
-            tvUrlFormat: 'numeric', // 'numeric' | 'sxxexx' | 'dash' | 'query'
+            tvUrlFormat: 'numeric', // 'numeric' | 'sxxexx' | 'dash' | 'query' (VAPlayer only)
             lightsOff: false,
             directModalType: 'movie',
+
+            // VAPlayer Safety Gate & VidRift Auto-Resume State
+            vaplayerGateBypassedForLoad: false,
+            vidriftResumeSentForLoad: false,
+
+            // Real-Time Playback Timestamp & Throttle State (VidRift + Vidy)
+            currentPlaybackTime: 0,
+            currentDuration: 0,
+            resumeProgressSeconds: 0,
+            lastLocalSaveTs: 0,
+            lastCloudSaveTs: 0,
+
             // Auth & Supabase Cloud Sync State
             authMode: 'login', // 'login' | 'register'
             currentUser: null
@@ -1026,7 +1557,18 @@
             renderSkeletonGrids();
             updateWatchlistBadge();
             renderRecentlyWatched();
+            renderVidriftCustomizerUI();
             updateAuthUI();
+
+            // Register unified two-way postMessage listener (VidRift + Vidy)
+            window.addEventListener('message', handlePlayerMessage);
+
+            // Flush progress synchronously to localStorage if user closes tab while watching
+            window.addEventListener('beforeunload', () => {
+                if (state.currentMedia && state.currentPlaybackTime > 0) {
+                    persistCurrentPlaybackProgress(false);
+                }
+            });
 
             // Load live TMDB & OMDb catalog independently
             loadInitialTmdbCatalog(false);
@@ -1066,6 +1608,20 @@
             return `https://placehold.co/1280x720/0c1017/e11d48?text=${encodeURIComponent(title || 'CineVault')}`;
         }
 
+        /**
+         * Formats seconds cleanly into MM:SS or H:MM:SS.
+         */
+        function formatSeconds(sec) {
+            const total = Math.max(0, Math.floor(Number(sec) || 0));
+            const hours = Math.floor(total / 3600);
+            const minutes = Math.floor((total % 3600) / 60);
+            const seconds = total % 60;
+            if (hours > 0) {
+                return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+            return `${minutes}:${String(seconds).padStart(2, '0')}`;
+        }
+
         /**************************************************************
          * 4. NORMALIZE TMDB DATA & FETCH LIVE CATALOG
          **************************************************************/
@@ -1094,6 +1650,7 @@
             const existing = state.mediaRegistry[uid] || {};
 
             const item = {
+                ...existing,
                 uid,
                 type,
                 title,
@@ -1174,6 +1731,36 @@
             return item.imdbId;
         }
 
+        // Resolve numeric TMDB ID from an IMDb ID (`tt...`) for VidRift & Vidy playback
+        async function ensureTmdbId(item) {
+            if (!item || item.tmdbId || !item.imdbId) return item ? item.tmdbId : '';
+            try {
+                const res = await fetch(`${TMDB_BASE}/find/${encodeURIComponent(item.imdbId)}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
+                if (res.ok) {
+                    const data = await res.json();
+                    let found = null;
+                    if (item.type === 'tv') {
+                        found = (data.tv_results && data.tv_results[0]) || (data.movie_results && data.movie_results[0]);
+                    } else {
+                        found = (data.movie_results && data.movie_results[0]) || (data.tv_results && data.tv_results[0]);
+                    }
+                    if (found && found.id) {
+                        item.tmdbId = String(found.id);
+                        if (!item.poster || item.poster.includes('placehold.co')) {
+                            if (found.poster_path) item.poster = `${TMDB_IMG_W500}${found.poster_path}`;
+                        }
+                        if (found.overview && (!item.description || item.description.startsWith('Stream '))) {
+                            item.description = found.overview;
+                        }
+                        state.mediaRegistry[item.uid] = item;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not resolve TMDB ID from IMDb ID:', e);
+            }
+            return item.tmdbId;
+        }
+
         /**************************************************************
          * 5. HERO BANNER CAROUSEL
          **************************************************************/
@@ -1246,11 +1833,15 @@
          **************************************************************/
         function createMediaCardHTML(item) {
             const inWatchlist = state.watchlist.includes(item.uid);
-            const typeBadge = item.type === 'tv'
-                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-500 text-black shadow">TV</span>`
-                : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-brand-500 text-white shadow">Movie</span>`;
+            const typeBadge = item.type === 'anime'
+                ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-violet-500 text-white shadow">Anime</span>`
+                : (item.type === 'tv'
+                    ? `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-amber-500 text-black shadow">TV</span>`
+                    : `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase bg-brand-500 text-white shadow">Movie</span>`);
 
-            const displayId = item.imdbId ? item.imdbId : `TMDB ${item.tmdbId}`;
+            const displayId = item.anilistId
+                ? `AniList ${item.anilistId}`
+                : (item.imdbId ? item.imdbId : `TMDB ${item.tmdbId}`);
             const safeTitle = (item.title || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 
             return `
@@ -1422,15 +2013,20 @@
                     <div class="col-span-full bg-gradient-to-r from-brand-600/20 to-rose-600/10 border border-brand-500/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <span class="text-[11px] font-bold uppercase text-brand-400">Direct ID Detected (${trimmed})</span>
-                            <h4 class="font-display font-bold text-white text-sm sm:text-base mt-0.5">Stream ID "${trimmed}" immediately on vaplayer.ru</h4>
+                            <h4 class="font-display font-bold text-white text-sm sm:text-base mt-0.5">Stream ID "${trimmed}" immediately on VidRift, Vidy, or VAPlayer</h4>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <button onclick="quickLaunchById('${trimmed}', 'movie')" class="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold flex items-center gap-1.5">
                                 <i class="fa-solid fa-film"></i> Play as Movie
                             </button>
                             <button onclick="quickLaunchById('${trimmed}', 'tv')" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold flex items-center gap-1.5">
                                 <i class="fa-solid fa-tv"></i> Play as TV Show
                             </button>
+                            ${isNumericId ? `
+                                <button onclick="quickLaunchById('${trimmed}', 'anime')" class="px-3.5 py-2 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-xs font-semibold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-dragon"></i> Play as Anime (AniList)
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -1439,7 +2035,7 @@
             try {
                 let resultsList = [];
 
-                // If user searched an exact IMDB ID (tt...), resolve it via TMDB /find/{imdb_id} and OMDb
+                // If user searched an exact IMDB ID (tt...), resolve it via TMDB /find/{imdb_id}
                 if (isImdbId) {
                     const findRes = await fetch(`${TMDB_BASE}/find/${encodeURIComponent(trimmed)}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
                     if (findRes.ok) {
@@ -1510,7 +2106,7 @@
                             <i class="fa-solid fa-film text-3xl text-brand-500 mb-3"></i>
                             <h3 class="font-display font-bold text-base sm:text-lg text-white">No exact matches for "${trimmed}"</h3>
                             <p class="text-xs text-gray-400 max-w-md mx-auto mt-1">
-                                Have an IMDB ID (<code class="text-gray-200">tt...</code>) or TMDB ID? Launch it directly in the player!
+                                Have an IMDB ID (<code class="text-gray-200">tt...</code>), TMDB ID, or AniList ID? Launch it directly in the player!
                             </p>
                             <button onclick="openDirectPlayModal()" class="mt-4 px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs font-semibold text-white">
                                 Open Direct ID Streamer
@@ -1535,11 +2131,775 @@
         }
 
         /**************************************************************
-         * 9. PLAYER ENGINE + REAL TMDB SEASONS/EPISODES + OMDB DETAILS
+         * 9. MULTI-SERVER PLAYER ENGINE (VIDRIFT + VIDY + VAPLAYER)
+         *    + TWO-WAY TIMESTAMP SYNC & VAPLAYER SAFETY GATE
          **************************************************************/
-        async function playMediaByUid(uid) {
-            const item = state.mediaRegistry[uid];
+        let vidriftResumeTimer = null;
+
+        /**
+         * Returns true if the user acknowledged the VAPlayer Ad/18+ warning during this browser session.
+         */
+        function isVaplayerAcknowledged() {
+            return sessionStorage.getItem('cinevault_vaplayer_ack') === 'true' || state.vaplayerGateBypassedForLoad;
+        }
+
+        function showVaplayerGate() {
+            const gate = document.getElementById('vaplayer-gate-overlay');
+            const iframe = document.getElementById('video-iframe');
+            const checkbox = document.getElementById('vaplayer-ack-checkbox');
+            if (checkbox) checkbox.checked = false;
+            if (iframe) iframe.src = ''; // Strictly block vaplayer.ru until confirmed
+            if (gate) gate.classList.remove('hidden');
+        }
+
+        function hideVaplayerGate() {
+            const gate = document.getElementById('vaplayer-gate-overlay');
+            if (gate) gate.classList.add('hidden');
+        }
+
+        function confirmVaplayerAccess() {
+            const checkbox = document.getElementById('vaplayer-ack-checkbox');
+            if (checkbox && checkbox.checked) {
+                sessionStorage.setItem('cinevault_vaplayer_ack', 'true');
+            }
+            state.vaplayerGateBypassedForLoad = true;
+            hideVaplayerGate();
+            refreshPlayerIframe();
+            showToast('Loading Server 3: VAPlayer — Ad Blocker recommended');
+        }
+
+        /**
+         * VidRift Customization UI Helpers
+         */
+        function saveVidriftPrefs() {
+            try {
+                localStorage.setItem('cinevault_vidrift_prefs', JSON.stringify(state.vidriftPrefs));
+            } catch (e) {}
+        }
+
+        function toggleVidriftCustomizer(forceState = null) {
+            state.vidriftCustomizerOpen = forceState !== null ? forceState : !state.vidriftCustomizerOpen;
+            const panel = document.getElementById('vidrift-customizer-panel');
+            const chevron = document.getElementById('vidrift-customize-chevron');
+            if (panel) {
+                panel.classList.toggle('hidden', !state.vidriftCustomizerOpen);
+            }
+            if (chevron) {
+                chevron.style.transform = state.vidriftCustomizerOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+
+        function renderVidriftCustomizerUI() {
+            const p = state.vidriftPrefs;
+
+            const brandInput = document.getElementById('vr-brand');
+            const colorInput = document.getElementById('vr-brand-color');
+            const colorPreview = document.getElementById('vr-color-preview');
+            const logoInput = document.getElementById('vr-brand-logo');
+            const watermarkCb = document.getElementById('vr-watermark');
+            const fontSelect = document.getElementById('vr-font');
+            const capsOffCb = document.getElementById('vr-caps-off');
+            const subSelect = document.getElementById('vr-sub');
+            const autoPlayCb = document.getElementById('vr-autoplay');
+            const mutedCb = document.getElementById('vr-muted');
+            const showTitleCb = document.getElementById('vr-show-title');
+            const downloadCb = document.getElementById('vr-download');
+            const exitCb = document.getElementById('vr-exit');
+
+            if (brandInput) brandInput.value = p.brand || '';
+            if (colorInput) colorInput.value = (p.brandColor || 'E11D48').replace(/^#/, '').toUpperCase();
+            if (colorPreview) {
+                const validHex = /^[0-9A-Fa-f]{6}$/.test(p.brandColor) ? p.brandColor : 'E11D48';
+                colorPreview.style.backgroundColor = `#${validHex}`;
+            }
+            if (logoInput) logoInput.value = p.brandLogo || '';
+            if (watermarkCb) watermarkCb.checked = !!p.watermark;
+            if (fontSelect) fontSelect.value = p.font || 'Inter';
+            if (capsOffCb) capsOffCb.checked = !!p.sentenceCase;
+            if (subSelect) subSelect.value = p.sub || '';
+            if (autoPlayCb) autoPlayCb.checked = p.autoplay !== false;
+            if (mutedCb) mutedCb.checked = !!p.muted;
+            if (showTitleCb) showTitleCb.checked = p.showTitle !== false;
+            if (downloadCb) downloadCb.checked = p.download !== false;
+            if (exitCb) exitCb.checked = p.exit !== false;
+
+            // Render color swatches
+            const swatchesEl = document.getElementById('vr-color-swatches');
+            if (swatchesEl) {
+                swatchesEl.innerHTML = VIDRIFT_COLOR_PRESETS.map(swatch => {
+                    const active = (p.brandColor || '').toUpperCase() === swatch.hex.toUpperCase();
+                    return `
+                        <button
+                            type="button"
+                            onclick="selectVidriftColor('${swatch.hex}')"
+                            title="${swatch.name} (#${swatch.hex})"
+                            class="w-6 h-6 rounded-lg border-2 transition transform hover:scale-110 ${active ? 'border-white ring-2 ring-white/40 scale-110' : 'border-white/20'}"
+                            style="background-color: #${swatch.hex};"
+                        ></button>
+                    `;
+                }).join('');
+            }
+
+            // Update UI Scale buttons
+            document.querySelectorAll('.vr-scale-btn').forEach(btn => {
+                if (btn.dataset.scale === String(p.uiScale || '1')) {
+                    btn.className = 'vr-scale-btn py-1.5 rounded-lg text-xs font-semibold bg-brand-500 text-white border border-brand-400 transition';
+                } else {
+                    btn.className = 'vr-scale-btn py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 hover:text-white transition';
+                }
+            });
+
+            // Update Control Bar Background toggle
+            const bgGrad = document.getElementById('vr-bg-gradient');
+            const bgSolid = document.getElementById('vr-bg-solid');
+            if (bgGrad && bgSolid) {
+                if (p.controlBg === 'solid') {
+                    bgSolid.className = 'py-1.5 rounded-lg text-xs font-semibold bg-brand-500 text-white border border-brand-400 transition';
+                    bgGrad.className = 'py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 hover:text-white transition';
+                } else {
+                    bgGrad.className = 'py-1.5 rounded-lg text-xs font-semibold bg-brand-500 text-white border border-brand-400 transition';
+                    bgSolid.className = 'py-1.5 rounded-lg text-xs font-semibold bg-dark-900 text-gray-300 border border-white/10 hover:text-white transition';
+                }
+            }
+
+            // Render Hide Controls chips
+            const chipsEl = document.getElementById('vr-hide-chips');
+            const countEl = document.getElementById('vr-hidden-count');
+            const hiddenSet = new Set(p.hide || []);
+            if (countEl) countEl.textContent = `${hiddenSet.size} hidden`;
+            if (chipsEl) {
+                chipsEl.innerHTML = VIDRIFT_HIDE_OPTIONS.map(ctrl => {
+                    const isHidden = hiddenSet.has(ctrl);
+                    return `
+                        <button
+                            type="button"
+                            onclick="toggleVidriftHideChip('${ctrl}')"
+                            class="px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${
+                                isHidden
+                                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/45 line-through'
+                                    : 'bg-dark-900 text-gray-300 border-white/10 hover:border-white/25 hover:text-white'
+                            }"
+                        >
+                            ${ctrl}
+                        </button>
+                    `;
+                }).join('');
+            }
+        }
+
+        function updateVidriftPref(key, value) {
+            if (key === 'brandColor') {
+                const cleaned = String(value || '').replace(/[^0-9A-Fa-f]/g, '').slice(0, 6).toUpperCase();
+                state.vidriftPrefs.brandColor = cleaned;
+                const preview = document.getElementById('vr-color-preview');
+                if (preview && cleaned.length === 6) preview.style.backgroundColor = `#${cleaned}`;
+            } else if (key === 'brand') {
+                state.vidriftPrefs.brand = String(value || '').slice(0, 28);
+            } else {
+                state.vidriftPrefs[key] = value;
+            }
+            saveVidriftPrefs();
+            if (key === 'controlBg') renderVidriftCustomizerUI();
+        }
+
+        function selectVidriftColor(hex) {
+            state.vidriftPrefs.brandColor = hex.toUpperCase();
+            saveVidriftPrefs();
+            renderVidriftCustomizerUI();
+        }
+
+        function selectVidriftScale(scaleVal) {
+            state.vidriftPrefs.uiScale = String(scaleVal);
+            saveVidriftPrefs();
+            renderVidriftCustomizerUI();
+        }
+
+        function toggleVidriftHideChip(ctrl) {
+            const list = Array.isArray(state.vidriftPrefs.hide) ? [...state.vidriftPrefs.hide] : [];
+            const idx = list.indexOf(ctrl);
+            if (idx > -1) list.splice(idx, 1);
+            else list.push(ctrl);
+            state.vidriftPrefs.hide = list;
+            saveVidriftPrefs();
+            renderVidriftCustomizerUI();
+        }
+
+        function resetVidriftPrefs() {
+            state.vidriftPrefs = { ...DEFAULT_VIDRIFT_PREFS, hide: [] };
+            saveVidriftPrefs();
+            renderVidriftCustomizerUI();
+            if (state.currentMedia && state.activeProvider === 'vidrift') {
+                state.resumeProgressSeconds = Math.floor(state.currentPlaybackTime || 0);
+                refreshPlayerIframe();
+            }
+            showToast('VidRift player settings reset to defaults');
+        }
+
+        function applyVidriftPrefs() {
+            saveVidriftPrefs();
+            if (state.currentMedia && state.activeProvider === 'vidrift') {
+                // Preserve live playback timestamp when reloading player with new style/prefs
+                state.resumeProgressSeconds = Math.floor(state.currentPlaybackTime || 0);
+                persistCurrentPlaybackProgress(false);
+                refreshPlayerIframe();
+            }
+            showToast('Applied custom VidRift player settings!');
+        }
+
+        /**
+         * Retrieve saved progress (currentTime & duration) for a movie, TV season+episode, or anime episode.
+         */
+        function getSavedProgressFor(uid, type, season = 1, episode = 1) {
+            const recent = state.recentlyWatched.find(r => r.uid === uid);
+            const reg = state.mediaRegistry[uid];
+            const src = recent || reg;
+            if (!src) return { currentTime: 0, duration: 0 };
+
+            if (type === 'tv' || type === 'anime') {
+                const epKey = type === 'anime' ? `E${episode}` : `S${season}E${episode}`;
+                if (src.episodeProgress && src.episodeProgress[epKey]) {
+                    return {
+                        currentTime: Math.floor(Number(src.episodeProgress[epKey].currentTime) || 0),
+                        duration: Math.floor(Number(src.episodeProgress[epKey].duration) || 0)
+                    };
+                }
+                if (Number(src.season || 1) === Number(season) && Number(src.episode || 1) === Number(episode)) {
+                    return {
+                        currentTime: Math.floor(Number(src.progressSeconds) || 0),
+                        duration: Math.floor(Number(src.durationSeconds) || 0)
+                    };
+                }
+                return { currentTime: 0, duration: 0 };
+            }
+
+            return {
+                currentTime: Math.floor(Number(src.progressSeconds) || 0),
+                duration: Math.floor(Number(src.durationSeconds) || 0)
+            };
+        }
+
+        /**
+         * Sends `{ type: 'vidrift:resume', currentTime }` safely to the VidRift iframe once per load.
+         */
+        function sendVidriftResume() {
+            if (state.activeProvider !== 'vidrift' || state.vidriftResumeSentForLoad) return;
+            const resumeSec = Math.floor(Number(state.resumeProgressSeconds) || 0);
+            if (resumeSec < 5) return;
+
+            const iframe = document.getElementById('video-iframe');
+            if (!iframe || !iframe.contentWindow) return;
+
+            let targetOrigin = 'https://embed.vidrift.net';
+            try {
+                targetOrigin = new URL(state.vidriftBaseUrl).origin;
+            } catch (e) {}
+
+            try {
+                iframe.contentWindow.postMessage({ type: 'vidrift:resume', currentTime: resumeSec }, targetOrigin);
+                state.vidriftResumeSentForLoad = true;
+            } catch (e) {
+                try {
+                    iframe.contentWindow.postMessage({ type: 'vidrift:resume', currentTime: resumeSec }, '*');
+                    state.vidriftResumeSentForLoad = true;
+                } catch (err) {}
+            }
+        }
+
+        /**
+         * Fallback onload handler on `#video-iframe` to trigger VidRift auto-resume if `vidrift:ready` didn't fire first.
+         */
+        function handleIframeLoad() {
+            if (state.activeProvider !== 'vidrift' || !state.currentMedia) return;
+            const iframe = document.getElementById('video-iframe');
+            if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
+
+            clearTimeout(vidriftResumeTimer);
+            if (state.resumeProgressSeconds >= 5 && !state.vidriftResumeSentForLoad) {
+                vidriftResumeTimer = setTimeout(() => {
+                    sendVidriftResume();
+                }, 1200);
+            }
+        }
+
+        /**
+         * Unified two-way postMessage listener for BOTH VidRift (`vidrift:*`) and Vidy (`PLAYER_EVENT`).
+         */
+        function handlePlayerMessage(event) {
+            const modal = document.getElementById('player-modal');
+            if (!state.currentMedia || !modal || modal.classList.contains('hidden')) return;
+
+            let raw = event.data;
+            let payload = null;
+
+            if (typeof raw === 'string') {
+                try {
+                    payload = JSON.parse(raw);
+                } catch (e) {
+                    return;
+                }
+            } else if (raw && typeof raw === 'object') {
+                payload = raw;
+            } else {
+                return;
+            }
+
+            if (!payload || typeof payload !== 'object') return;
+
+            // --- A. VIDRIFT MESSAGES ---
+            let configuredVidriftOrigin = '';
+            try {
+                configuredVidriftOrigin = new URL(state.vidriftBaseUrl).origin;
+            } catch (e) {}
+
+            const isVidriftOrigin = (
+                event.origin === 'https://embed.vidrift.net' ||
+                event.origin === 'https://embed.vidrift.in' ||
+                (configuredVidriftOrigin && event.origin === configuredVidriftOrigin)
+            );
+            const isVidriftType = typeof payload.type === 'string' && payload.type.startsWith('vidrift:');
+
+            if (state.activeProvider === 'vidrift' && (isVidriftOrigin || isVidriftType)) {
+                if (payload.type === 'vidrift:ready') {
+                    clearTimeout(vidriftResumeTimer);
+                    sendVidriftResume();
+                    return;
+                }
+
+                if (payload.type === 'vidrift:exit') {
+                    closePlayerModal();
+                    return;
+                }
+
+                if (payload.type === 'vidrift:progress') {
+                    // Sync season/episode if user switched inside VidRift's episode picker
+                    if (state.currentMedia.type === 'tv' && payload.season && payload.episode) {
+                        const incomingS = parseInt(payload.season, 10);
+                        const incomingE = parseInt(payload.episode, 10);
+                        if (!isNaN(incomingS) && !isNaN(incomingE) && (incomingS !== state.tvSeason || incomingE !== state.tvEpisode)) {
+                            state.tvSeason = incomingS;
+                            state.tvEpisode = incomingE;
+                            const sSelect = document.getElementById('tv-season-select');
+                            const eInput = document.getElementById('tv-episode-input');
+                            if (sSelect) sSelect.value = String(incomingS);
+                            if (eInput) eInput.value = String(incomingE);
+                            refreshPlayerSubtitle();
+                        }
+                    }
+
+                    const curVal = Number(payload.currentTime);
+                    const durVal = Number(payload.duration);
+                    if (!isNaN(curVal) && curVal >= 0) {
+                        state.currentPlaybackTime = Math.floor(curVal);
+                    }
+                    if (!isNaN(durVal) && durVal > 0) {
+                        state.currentDuration = Math.floor(durVal);
+                    }
+
+                    updateTimestampPillUI(true);
+
+                    const now = Date.now();
+                    if (now - state.lastLocalSaveTs >= 3000) {
+                        state.lastLocalSaveTs = now;
+                        const shouldSyncCloud = (now - state.lastCloudSaveTs >= 15000);
+                        if (shouldSyncCloud) state.lastCloudSaveTs = now;
+                        persistCurrentPlaybackProgress(shouldSyncCloud);
+                    }
+                    return;
+                }
+
+                if (payload.type === 'vidrift:ended') {
+                    state.currentPlaybackTime = 0;
+                    state.resumeProgressSeconds = 0;
+                    state.lastLocalSaveTs = Date.now();
+                    state.lastCloudSaveTs = Date.now();
+                    persistCurrentPlaybackProgress(true);
+                    updateTimestampPillUI(false);
+                    return;
+                }
+            }
+
+            // --- B. VIDY MESSAGES ---
+            if (state.activeProvider !== 'vidy') return;
+
+            const fromVidyOrigin = typeof event.origin === 'string' && event.origin.toLowerCase().includes('vidy');
+            const isPlayerEventObj = (
+                payload.type === 'PLAYER_EVENT' ||
+                ['timeupdate', 'play', 'pause', 'ended'].includes(payload.event)
+            );
+            if (!fromVidyOrigin && !isPlayerEventObj) return;
+            if (payload.type === 'MEDIA_DATA') return;
+
+            const evtData = (payload.type === 'PLAYER_EVENT' && payload.data && typeof payload.data === 'object')
+                ? payload.data
+                : payload;
+
+            const evtType = evtData.event || payload.event;
+            if (!['timeupdate', 'play', 'pause', 'ended'].includes(evtType)) return;
+
+            if (state.currentMedia.type === 'tv' && evtData.season && evtData.episode) {
+                const incomingS = parseInt(evtData.season, 10);
+                const incomingE = parseInt(evtData.episode, 10);
+                if (!isNaN(incomingS) && !isNaN(incomingE) && (incomingS !== state.tvSeason || incomingE !== state.tvEpisode)) {
+                    state.tvSeason = incomingS;
+                    state.tvEpisode = incomingE;
+                    const sSelect = document.getElementById('tv-season-select');
+                    const eInput = document.getElementById('tv-episode-input');
+                    if (sSelect) sSelect.value = String(incomingS);
+                    if (eInput) eInput.value = String(incomingE);
+                    refreshPlayerSubtitle();
+                }
+            }
+
+            const curTime = typeof evtData.currentTime === 'number' && !isNaN(evtData.currentTime)
+                ? Math.max(0, Math.floor(evtData.currentTime))
+                : state.currentPlaybackTime;
+            const durTime = typeof evtData.duration === 'number' && !isNaN(evtData.duration) && evtData.duration > 0
+                ? Math.floor(evtData.duration)
+                : state.currentDuration;
+
+            state.currentPlaybackTime = curTime;
+            if (durTime > 0) state.currentDuration = durTime;
+
+            updateTimestampPillUI(evtType === 'timeupdate' || evtType === 'play');
+
+            const now = Date.now();
+            if (evtType === 'timeupdate') {
+                if (now - state.lastLocalSaveTs >= 3000) {
+                    state.lastLocalSaveTs = now;
+                    const shouldSyncCloud = (now - state.lastCloudSaveTs >= 15000);
+                    if (shouldSyncCloud) state.lastCloudSaveTs = now;
+                    persistCurrentPlaybackProgress(shouldSyncCloud);
+                }
+            } else if (evtType === 'pause') {
+                state.lastLocalSaveTs = now;
+                state.lastCloudSaveTs = now;
+                persistCurrentPlaybackProgress(true);
+            } else if (evtType === 'ended') {
+                const pctWatched = state.currentDuration > 0 ? (state.currentPlaybackTime / state.currentDuration) : 1;
+                if (pctWatched >= 0.95 || evtType === 'ended') {
+                    state.currentPlaybackTime = 0;
+                    state.resumeProgressSeconds = 0;
+                }
+                state.lastLocalSaveTs = now;
+                state.lastCloudSaveTs = now;
+                persistCurrentPlaybackProgress(true);
+                updateTimestampPillUI(false);
+            }
+        }
+
+        /**
+         * Updates the shared timestamp pill in the player bar (e.g., "Saved: 14:22 / 2:05:10").
+         */
+        function updateTimestampPillUI(isLive = false) {
+            const textEl = document.getElementById('player-timestamp-text');
+            const pulseEl = document.getElementById('player-sync-pulse');
+            if (!textEl) return;
+
+            const curStr = formatSeconds(state.currentPlaybackTime || 0);
+            if (state.currentDuration > 0) {
+                textEl.textContent = `Saved: ${curStr} / ${formatSeconds(state.currentDuration)}`;
+            } else {
+                textEl.textContent = `Saved: ${curStr}`;
+            }
+
+            if (pulseEl) {
+                pulseEl.className = isLive
+                    ? 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse'
+                    : 'w-1.5 h-1.5 rounded-full bg-brand-500';
+            }
+        }
+
+        /**
+         * Writes current movie, TV episode, or anime episode playback progress into recentlyWatched + mediaRegistry,
+         * saves to localStorage, and optionally flushes immediately to Supabase.
+         */
+        function persistCurrentPlaybackProgress(syncToCloud = false) {
+            const item = state.currentMedia;
             if (!item) return;
+
+            const s = parseInt(state.tvSeason, 10) || 1;
+            const e = parseInt(state.tvEpisode, 10) || 1;
+            const curSec = Math.max(0, Math.floor(state.currentPlaybackTime || 0));
+            const durSec = Math.max(0, Math.floor(state.currentDuration || 0));
+
+            const existingRecent = state.recentlyWatched.find(r => r.uid === item.uid) || {};
+            const existingReg = state.mediaRegistry[item.uid] || {};
+            const mergedEpProgress = {
+                ...(existingReg.episodeProgress || {}),
+                ...(existingRecent.episodeProgress || {})
+            };
+
+            if (item.type === 'tv' || item.type === 'anime') {
+                const epKey = item.type === 'anime' ? `E${e}` : `S${s}E${e}`;
+                mergedEpProgress[epKey] = {
+                    currentTime: curSec,
+                    duration: durSec,
+                    updatedAt: Date.now()
+                };
+            }
+
+            const entry = {
+                ...existingReg,
+                ...existingRecent,
+                ...item,
+                season: s,
+                episode: e,
+                progressSeconds: curSec,
+                durationSeconds: durSec,
+                episodeProgress: mergedEpProgress,
+                updatedAt: Date.now()
+            };
+
+            state.mediaRegistry[item.uid] = entry;
+            state.recentlyWatched = [
+                entry,
+                ...state.recentlyWatched.filter(r => r.uid !== item.uid)
+            ].slice(0, 12);
+
+            localStorage.setItem('cinevault_recent_v2', JSON.stringify(state.recentlyWatched));
+            persistRegistry();
+
+            if (syncToCloud) {
+                syncLocalDataToSupabase();
+                updateAuthUI();
+            }
+        }
+
+        /**
+         * Resets saved progress for the active movie, TV episode, or anime episode back to 0:00 and reloads player.
+         */
+        function resetCurrentPlaybackProgress() {
+            if (!state.currentMedia) return;
+            state.currentPlaybackTime = 0;
+            state.resumeProgressSeconds = 0;
+            persistCurrentPlaybackProgress(true);
+            updateTimestampPillUI(false);
+            refreshPlayerIframe();
+            showToast('Restarted playback from 0:00');
+        }
+
+        /**
+         * Switches between Server 1 (VidRift), Server 2 (Vidy), and Server 3 (VAPlayer).
+         */
+        async function switchStreamingProvider(provider) {
+            if (provider !== 'vidrift' && provider !== 'vidy' && provider !== 'vaplayer') return;
+
+            // Flush current progress before switching servers
+            if (state.currentMedia) {
+                persistCurrentPlaybackProgress(true);
+            }
+
+            // AniList anime requires VidRift or Vidy (not VAPlayer)
+            if (provider === 'vaplayer' && state.currentMedia && state.currentMedia.type === 'anime') {
+                showToast('AniList Anime is supported on VidRift and Vidy (not VAPlayer).');
+                return;
+            }
+
+            state.activeProvider = provider;
+            localStorage.setItem('cinevault_provider', provider);
+
+            // Reset single-load VAPlayer bypass when intentionally switching into VAPlayer
+            if (provider === 'vaplayer') {
+                state.vaplayerGateBypassedForLoad = false;
+                toggleVidriftCustomizer(false);
+            } else {
+                hideVaplayerGate();
+                if (provider !== 'vidrift') {
+                    toggleVidriftCustomizer(false);
+                }
+            }
+
+            // Seamlessly carry over current timestamp when switching between VidRift and Vidy
+            if ((provider === 'vidrift' || provider === 'vidy') && state.currentMedia) {
+                state.resumeProgressSeconds = Math.floor(state.currentPlaybackTime || 0);
+                if (state.currentMedia.type !== 'anime' && !state.currentMedia.tmdbId && state.currentMedia.imdbId) {
+                    showToast(`Resolving TMDB ID for ${provider === 'vidrift' ? 'VidRift' : 'Vidy'}...`);
+                    await ensureTmdbId(state.currentMedia);
+                }
+                if (state.currentMedia.type !== 'anime' && !state.currentMedia.tmdbId) {
+                    state.activeProvider = 'vaplayer';
+                    state.vaplayerGateBypassedForLoad = false;
+                    showToast('TMDB ID not found for this title — switched to VAPlayer (IMDb).');
+                }
+            }
+
+            updateServerUI();
+            refreshPlayerIframe();
+
+            const labels = {
+                vidrift: 'Switched to Server 1: VidRift',
+                vidy: 'Switched to Server 2: Vidy',
+                vaplayer: 'Selected Server 3: VAPlayer (Ad Blocker Recommended)'
+            };
+            showToast(labels[state.activeProvider] || 'Server updated');
+        }
+
+        function toggleVidyAutoplay() {
+            state.vidyAutoplay = !state.vidyAutoplay;
+            localStorage.setItem('cinevault_vidy_autoplay', String(state.vidyAutoplay));
+            updateServerUI();
+            if (state.currentMedia && state.activeProvider === 'vidy') {
+                state.resumeProgressSeconds = Math.floor(state.currentPlaybackTime || 0);
+                refreshPlayerIframe();
+            }
+            showToast(`Vidy Autoplay turned ${state.vidyAutoplay ? 'ON' : 'OFF'}`);
+        }
+
+        function toggleVidyAutoNext() {
+            state.vidyAutoNext = !state.vidyAutoNext;
+            localStorage.setItem('cinevault_vidy_autonext', String(state.vidyAutoNext));
+            updateServerUI();
+            if (state.currentMedia && state.activeProvider === 'vidy' && state.currentMedia.type === 'tv') {
+                state.resumeProgressSeconds = Math.floor(state.currentPlaybackTime || 0);
+                refreshPlayerIframe();
+            }
+            showToast(`Vidy Auto-Next Episode turned ${state.vidyAutoNext ? 'ON' : 'OFF'}`);
+        }
+
+        function toggleCurrentAnimeDub() {
+            if (!state.currentMedia || state.currentMedia.type !== 'anime') return;
+            state.currentMedia.dub = !state.currentMedia.dub;
+            state.mediaRegistry[state.currentMedia.uid] = state.currentMedia;
+            updateAnimeDubButtonUI();
+            state.resumeProgressSeconds = Math.floor(state.currentPlaybackTime || 0);
+            refreshPlayerIframe();
+            showToast(`Anime audio switched to ${state.currentMedia.dub ? 'English Dub (?dub=1)' : 'Subtitled'}`);
+        }
+
+        function updateAnimeDubButtonUI() {
+            const btn = document.getElementById('player-anime-dub-toggle');
+            const label = document.getElementById('player-anime-dub-label');
+            if (!btn || !label) return;
+            if (state.currentMedia && state.currentMedia.type === 'anime') {
+                btn.classList.remove('hidden');
+                const isDub = !!state.currentMedia.dub;
+                label.textContent = isDub ? 'Audio: English Dub' : 'Audio: Sub';
+                btn.className = isDub
+                    ? 'px-2.5 py-2 rounded-xl bg-brand-500/20 border border-brand-500/40 text-xs font-semibold text-brand-300 flex items-center gap-1.5 transition'
+                    : 'px-2.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 border border-white/15 text-xs font-semibold text-gray-300 flex items-center gap-1.5 transition';
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Updates 3-Server Switcher button styles and shows/hides VidRift, Vidy, and VAPlayer controls & warnings.
+         */
+        function updateServerUI() {
+            const vidriftBtn = document.getElementById('server-btn-vidrift');
+            const vidyBtn = document.getElementById('server-btn-vidy');
+            const vaBtn = document.getElementById('server-btn-vaplayer');
+
+            const syncControlsGroup = document.getElementById('sync-controls-group');
+            const vidriftCustomizeBtn = document.getElementById('vidrift-customize-toggle');
+            const vidyOnlyToggles = document.getElementById('vidy-only-toggles');
+            const vaWarningBanner = document.getElementById('vaplayer-warning-banner');
+            const vaIdSwitcher = document.getElementById('vaplayer-id-switcher');
+            const vaTvFormatBar = document.getElementById('vaplayer-tv-format-bar');
+
+            const autoPlayBtn = document.getElementById('vidy-autoplay-toggle');
+            const autoPlayLabel = document.getElementById('vidy-autoplay-label');
+            const autoNextBtn = document.getElementById('vidy-autonext-toggle');
+            const autoNextLabel = document.getElementById('vidy-autonext-label');
+            const providerBadge = document.getElementById('active-provider-badge');
+
+            const isVidrift = state.activeProvider === 'vidrift';
+            const isVidy = state.activeProvider === 'vidy';
+            const isVaplayer = state.activeProvider === 'vaplayer';
+            const isTv = state.currentMedia && state.currentMedia.type === 'tv';
+
+            const activeBtnClass = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-brand-500 text-white border border-brand-400/50 shadow-md shadow-brand-500/25 flex items-center gap-1.5 sm:gap-2 transition active:scale-95';
+            const inactiveBtnClass = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-dark-800 text-gray-300 hover:text-white hover:bg-dark-700 border border-white/10 flex items-center gap-1.5 sm:gap-2 transition active:scale-95';
+
+            // 1. Style Server 1 (VidRift)
+            vidriftBtn.className = isVidrift ? activeBtnClass : inactiveBtnClass;
+            vidriftBtn.querySelector('[data-server-badge]').className = isVidrift
+                ? 'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-white/20 text-white'
+                : 'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-white/10 text-gray-300';
+
+            // 2. Style Server 2 (Vidy)
+            vidyBtn.className = isVidy ? activeBtnClass : inactiveBtnClass;
+            vidyBtn.querySelector('[data-server-badge]').className = isVidy
+                ? 'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-white/20 text-white'
+                : 'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-white/10 text-gray-300';
+
+            // 3. Style Server 3 (VAPlayer with amber/rose Ads / 18+ warning styling)
+            vaBtn.className = isVaplayer
+                ? 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-600 text-white border border-amber-400/60 shadow-md shadow-amber-500/25 flex items-center gap-1.5 sm:gap-2 transition active:scale-95'
+                : inactiveBtnClass;
+            vaBtn.querySelector('[data-server-badge]').className = isVaplayer
+                ? 'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-black/30 text-amber-100 border border-amber-300/40'
+                : 'px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-amber-500/20 text-amber-300 border border-amber-500/30';
+
+            // 4. Show/Hide Contextual Controls
+            if (isVidrift) {
+                syncControlsGroup.classList.remove('hidden');
+                vidriftCustomizeBtn.classList.remove('hidden');
+                vidyOnlyToggles.classList.add('hidden');
+                vaWarningBanner.classList.add('hidden');
+                vaIdSwitcher.classList.add('hidden');
+                vaTvFormatBar.classList.add('hidden');
+                if (providerBadge) {
+                    providerBadge.textContent = 'VIDRIFT EMBED';
+                    providerBadge.className = 'text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20';
+                }
+            } else if (isVidy) {
+                syncControlsGroup.classList.remove('hidden');
+                vidriftCustomizeBtn.classList.add('hidden');
+                vidyOnlyToggles.classList.remove('hidden');
+                vaWarningBanner.classList.add('hidden');
+                vaIdSwitcher.classList.add('hidden');
+                vaTvFormatBar.classList.add('hidden');
+                toggleVidriftCustomizer(false);
+                if (providerBadge) {
+                    providerBadge.textContent = 'VIDY EMBED';
+                    providerBadge.className = 'text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20';
+                }
+            } else {
+                syncControlsGroup.classList.add('hidden');
+                vidriftCustomizeBtn.classList.add('hidden');
+                vidyOnlyToggles.classList.add('hidden');
+                vaWarningBanner.classList.remove('hidden');
+                vaIdSwitcher.classList.remove('hidden');
+                vaTvFormatBar.classList.remove('hidden');
+                toggleVidriftCustomizer(false);
+                if (providerBadge) {
+                    providerBadge.textContent = 'VAPLAYER EMBED (ADS / 18+)';
+                    providerBadge.className = 'text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/30';
+                }
+            }
+
+            // Update Vidy Autoplay toggle styling
+            if (autoPlayBtn && autoPlayLabel) {
+                autoPlayLabel.textContent = `Autoplay: ${state.vidyAutoplay ? 'ON' : 'OFF'}`;
+                autoPlayBtn.className = state.vidyAutoplay
+                    ? 'px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1.5 transition'
+                    : 'px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-dark-800 text-gray-400 border border-white/10 hover:text-white flex items-center gap-1.5 transition';
+            }
+
+            // Update Vidy Auto-Next Episode toggle (TV shows only)
+            if (autoNextBtn && autoNextLabel) {
+                if (isTv) {
+                    autoNextBtn.classList.remove('hidden');
+                    autoNextLabel.textContent = `Auto-Next Ep: ${state.vidyAutoNext ? 'ON' : 'OFF'}`;
+                    autoNextBtn.className = state.vidyAutoNext
+                        ? 'px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 flex items-center gap-1.5 transition'
+                        : 'px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-dark-800 text-gray-400 border border-white/10 hover:text-white flex items-center gap-1.5 transition';
+                } else {
+                    autoNextBtn.classList.add('hidden');
+                }
+            }
+
+            updateAnimeDubButtonUI();
+            updateTimestampPillUI(false);
+        }
+
+        async function playMediaByUid(uid) {
+            const recent = state.recentlyWatched.find(r => r.uid === uid);
+            const reg = state.mediaRegistry[uid];
+            const item = recent ? { ...(reg || {}), ...recent } : reg;
+            if (!item) return;
+            state.mediaRegistry[uid] = item;
             await openPlayerWithMedia(item, item.season || 1, item.episode || 1);
         }
 
@@ -1547,9 +2907,23 @@
             state.currentMedia = item;
             state.tvSeason = season;
             state.tvEpisode = episode;
+            state.vaplayerGateBypassedForLoad = false;
 
-            // Default to TMDB ID if available, otherwise IMDB ID
+            // Load saved timestamp progress for this movie, TV season+episode, or anime episode
+            const savedProg = getSavedProgressFor(item.uid, item.type, season, episode);
+            state.currentPlaybackTime = savedProg.currentTime || 0;
+            state.currentDuration = savedProg.duration || 0;
+            state.resumeProgressSeconds = savedProg.currentTime >= 5 ? savedProg.currentTime : 0;
+            state.lastLocalSaveTs = Date.now();
+            state.lastCloudSaveTs = Date.now();
+
+            // Default VAPlayer ID mode to TMDB if available, otherwise IMDb
             state.playerIdMode = item.tmdbId ? 'tmdb' : 'imdb';
+
+            // Force VidRift when launching an AniList anime item
+            if (item.type === 'anime' && state.activeProvider === 'vaplayer') {
+                state.activeProvider = 'vidrift';
+            }
 
             // Show Modal Immediately for fast UX
             const modal = document.getElementById('player-modal');
@@ -1557,10 +2931,17 @@
             document.body.style.overflow = 'hidden';
 
             // Header & Poster
-            document.getElementById('player-type-badge').textContent = item.type === 'tv' ? 'TV SERIES' : 'MOVIE';
-            document.getElementById('player-type-badge').className = item.type === 'tv'
-                ? 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-black'
-                : 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-brand-500 text-white';
+            const typeBadge = document.getElementById('player-type-badge');
+            if (item.type === 'anime') {
+                typeBadge.textContent = 'ANIME';
+                typeBadge.className = 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-violet-500 text-white';
+            } else if (item.type === 'tv') {
+                typeBadge.textContent = 'TV SERIES';
+                typeBadge.className = 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-amber-500 text-black';
+            } else {
+                typeBadge.textContent = 'MOVIE';
+                typeBadge.className = 'shrink-0 px-2 py-0.5 text-[10px] font-bold uppercase rounded bg-brand-500 text-white';
+            }
 
             document.getElementById('player-title').textContent = item.title;
             document.getElementById('player-overview').textContent = item.description || '';
@@ -1571,39 +2952,58 @@
                 posterThumb.onerror = () => { posterThumb.src = getPosterFallback(item.title); };
             }
 
+            // If VidRift or Vidy is active and item only has IMDb ID, resolve TMDB ID first
+            if ((state.activeProvider === 'vidrift' || state.activeProvider === 'vidy') && item.type !== 'anime' && !item.tmdbId && item.imdbId) {
+                await ensureTmdbId(item);
+                if (!item.tmdbId) {
+                    state.activeProvider = 'vaplayer';
+                    showToast('TMDB ID not found for this title — falling back to VAPlayer (IMDb).');
+                }
+            }
+
+            updateServerUI();
             updateIdModeButtonsUI();
             updateTvFormatButtonsUI();
             refreshPlayerIframe();
             saveToRecentlyWatched(item, state.tvSeason, state.tvEpisode);
 
-            // Show/Hide TV Season & Episode Panel
+            // Show/Hide TV Season & Episode Panel (also used for Anime episode navigation)
             const tvPanel = document.getElementById('tv-controls-panel');
+            const seasonWrap = document.getElementById('tv-season-control-wrap');
             if (item.type === 'tv') {
                 tvPanel.classList.remove('hidden');
+                if (seasonWrap) seasonWrap.classList.remove('hidden');
+                document.getElementById('season-episodes-heading').textContent = 'Episodes (Live from TMDB)';
                 await loadRealTvDetailsAndSeason(item, state.tvSeason);
+            } else if (item.type === 'anime') {
+                tvPanel.classList.remove('hidden');
+                if (seasonWrap) seasonWrap.classList.add('hidden');
+                document.getElementById('tv-episode-input').value = String(state.tvEpisode);
+                document.getElementById('season-episodes-heading').textContent = 'Anime Episodes (AniList)';
+                renderFallbackEpisodeButtons(Math.max(24, state.tvEpisode));
             } else {
                 tvPanel.classList.add('hidden');
             }
 
             // Resolve IMDB ID from TMDB if missing, then fetch rich OMDb metadata
-            await ensureImdbId(item);
-            refreshPlayerSubtitle();
-            await loadOmdbMetadata(item);
+            if (item.type !== 'anime') {
+                await ensureImdbId(item);
+                refreshPlayerSubtitle();
+                await loadOmdbMetadata(item);
+            } else {
+                document.getElementById('omdb-badges').innerHTML = `
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30">AniList ID: ${item.anilistId}</span>
+                    <span class="px-2 py-0.5 rounded text-xs font-semibold bg-white/10 text-gray-200">${item.dub ? 'English Dub' : 'Subtitled'}</span>
+                `;
+                document.getElementById('omdb-credits').innerHTML = '';
+            }
         }
 
         async function loadRealTvDetailsAndSeason(item, seasonNumber) {
             const seasonSelect = document.getElementById('tv-season-select');
 
             if (!item.tmdbId && item.imdbId) {
-                try {
-                    const findRes = await fetch(`${TMDB_BASE}/find/${item.imdbId}?api_key=${TMDB_API_KEY}&external_source=imdb_id`);
-                    if (findRes.ok) {
-                        const findData = await findRes.json();
-                        if (findData.tv_results && findData.tv_results.length > 0) {
-                            item.tmdbId = String(findData.tv_results[0].id);
-                        }
-                    }
-                } catch (e) {}
+                await ensureTmdbId(item);
             }
 
             if (!item.tmdbId) {
@@ -1662,6 +3062,14 @@
                     const epTitle = ep.name || `Episode ${epNum}`;
                     const rating = ep.vote_average ? Number(ep.vote_average).toFixed(1) : '';
 
+                    // Show mini saved-time tag if this episode has saved progress
+                    const savedEp = state.currentMedia
+                        ? getSavedProgressFor(state.currentMedia.uid, 'tv', seasonNumber, epNum)
+                        : { currentTime: 0, duration: 0 };
+                    const epSavedTag = savedEp.currentTime >= 5
+                        ? ` • ${formatSeconds(savedEp.currentTime)}`
+                        : '';
+
                     return `
                         <button
                             onclick="selectEpisode(${epNum})"
@@ -1682,7 +3090,7 @@
                                     ${epNum}. ${epTitle}
                                 </p>
                                 <p class="text-[10px] text-gray-400 mt-0.5 truncate">
-                                    ${ep.runtime ? `${ep.runtime}m` : 'HD'} ${rating && rating !== '0.0' ? `• ⭐ ${rating}` : ''}
+                                    ${ep.runtime ? `${ep.runtime}m` : 'HD'} ${rating && rating !== '0.0' ? `• ⭐ ${rating}` : ''}<span class="text-brand-400 font-mono">${epSavedTag}</span>
                                 </p>
                             </div>
                         </button>
@@ -1779,10 +3187,105 @@
             }
         }
 
+        /**
+         * Builds the embed URL for the currently selected streaming provider:
+         * - Server 1 (VidRift):
+         *     Movie: https://embed.vidrift.net/embed/movie/{tmdbId}?...
+         *     TV:    https://embed.vidrift.net/embed/tv/{tmdbId}/{season}/{episode}?...
+         *     Anime: https://embed.vidrift.net/embed/anilist/{anilistId}/{episode}?...
+         * - Server 2 (Vidy):
+         *     Movie: https://www.vidy.st/movie/{tmdbId}?color=E11D48[&progress={sec}][&autoplay=true]
+         *     TV:    https://www.vidy.st/tv/{tmdbId}/{season}/{episode}?color=E11D48...
+         *     Anime: https://www.vidy.st/anime/{anilistId}/{episode}?color=E11D48...
+         * - Server 3 (VAPlayer):
+         *     Movie: https://vaplayer.ru/embed/movie/{id}
+         *     TV:    Numeric, SxxExx, Dash, or Query formats
+         */
         function buildEmbedUrl() {
             const item = state.currentMedia;
             if (!item) return '';
 
+            const s = parseInt(state.tvSeason, 10) || 1;
+            const e = parseInt(state.tvEpisode, 10) || 1;
+
+            // --- SERVER 1: VIDRIFT ---
+            if (state.activeProvider === 'vidrift' && (item.tmdbId || item.anilistId)) {
+                const vidriftBase = state.vidriftBaseUrl.replace(/\/+$/, '');
+                const p = state.vidriftPrefs || DEFAULT_VIDRIFT_PREFS;
+                const params = new URLSearchParams();
+
+                if (item.title) params.set('title', item.title);
+                if (p.brand && p.brand.trim()) params.set('brand', p.brand.trim().slice(0, 28));
+                if (p.brandColor && /^[0-9A-Fa-f]{6}$/.test(p.brandColor.trim())) {
+                    params.set('brandColor', p.brandColor.trim().toUpperCase());
+                }
+                if (p.brandLogo && /^https:\/\//i.test(p.brandLogo.trim())) {
+                    params.set('brandLogo', p.brandLogo.trim());
+                    if (p.watermark) params.set('watermark', '1');
+                }
+                if (p.showTitle) params.set('showTitle', '1');
+                if (p.exit) params.set('exit', '1');
+                if (p.download) params.set('download', '1');
+                if (p.uiScale && String(p.uiScale) !== '1') params.set('uiScale', String(p.uiScale));
+                if (p.sentenceCase) params.set('caps', '0');
+                if (p.controlBg === 'solid') params.set('controlBg', 'solid');
+                if (p.font && p.font !== 'Space Grotesk') params.set('font', p.font);
+                if (p.muted) params.set('muted', '1');
+                if (p.sub && p.sub.trim()) params.set('sub', p.sub.trim());
+                if (p.autoplay === false) params.set('autoplay', '0');
+                if (Array.isArray(p.hide) && p.hide.length > 0) {
+                    params.set('hide', p.hide.join(','));
+                }
+
+                let routePath = '';
+                if (item.type === 'anime' && item.anilistId) {
+                    routePath = `/embed/anilist/${item.anilistId}/${e}`;
+                    if (item.dub) params.set('dub', '1');
+                } else if (item.type === 'tv') {
+                    routePath = `/embed/tv/${item.tmdbId}/${s}/${e}`;
+                } else {
+                    routePath = `/embed/movie/${item.tmdbId}`;
+                }
+
+                const qs = params.toString();
+                return `${vidriftBase}${routePath}${qs ? `?${qs}` : ''}`;
+            }
+
+            // --- SERVER 2: VIDY ---
+            if (state.activeProvider === 'vidy' && (item.tmdbId || item.anilistId)) {
+                const vidyBase = state.vidyBaseUrl.replace(/\/+$/, '');
+                const params = new URLSearchParams();
+                params.set('color', VIDY_BRAND_COLOR);
+
+                const resumeSec = Math.floor(Number(state.resumeProgressSeconds) || 0);
+                if (resumeSec >= 5) {
+                    params.set('progress', String(resumeSec));
+                }
+
+                if (state.vidyAutoplay) {
+                    params.set('autoplay', 'true');
+                }
+
+                if (item.type === 'anime' && item.anilistId) {
+                    params.set('nextEpisode', 'true');
+                    params.set('episodeSelector', 'true');
+                    if (state.vidyAutoNext) params.set('autoplayNextEpisode', 'true');
+                    return `${vidyBase}/anime/${item.anilistId}/${e}?${params.toString()}`;
+                }
+
+                if (item.type === 'movie') {
+                    return `${vidyBase}/movie/${item.tmdbId}?${params.toString()}`;
+                }
+
+                params.set('nextEpisode', 'true');
+                params.set('episodeSelector', 'true');
+                if (state.vidyAutoNext) {
+                    params.set('autoplayNextEpisode', 'true');
+                }
+                return `${vidyBase}/tv/${item.tmdbId}/${s}/${e}?${params.toString()}`;
+            }
+
+            // --- SERVER 3: VAPLAYER ---
             const base = state.baseUrl.replace(/\/+$/, '');
             const activeId = state.playerIdMode === 'imdb'
                 ? (item.imdbId || item.tmdbId)
@@ -1792,10 +3295,7 @@
                 return `${base}/embed/movie/${activeId}`;
             }
 
-            const s = parseInt(state.tvSeason, 10) || 1;
-            const e = parseInt(state.tvEpisode, 10) || 1;
             const fmt = state.tvUrlFormat;
-
             if (fmt === 'sxxexx') {
                 const sPad = String(s).padStart(2, '0');
                 const ePad = String(e).padStart(2, '0');
@@ -1813,10 +3313,15 @@
         function refreshPlayerSubtitle() {
             const item = state.currentMedia;
             if (!item) return;
+            const serverLabel = state.activeProvider === 'vidrift'
+                ? 'Server: VidRift'
+                : (state.activeProvider === 'vidy' ? 'Server: Vidy' : 'Server: VAPlayer (Ads)');
             const parts = [
+                serverLabel,
+                item.anilistId ? `AniList: ${item.anilistId}` : null,
                 item.tmdbId ? `TMDB: ${item.tmdbId}` : null,
                 item.imdbId ? `IMDB: ${item.imdbId}` : null,
-                item.type === 'tv' ? `S${state.tvSeason}:E${state.tvEpisode}` : null
+                item.type === 'anime' ? `Ep ${state.tvEpisode}` : (item.type === 'tv' ? `S${state.tvSeason}:E${state.tvEpisode}` : null)
             ].filter(Boolean);
             document.getElementById('player-subtitle').textContent = parts.join('  •  ');
         }
@@ -1824,9 +3329,20 @@
         function refreshPlayerIframe() {
             const url = buildEmbedUrl();
             const iframe = document.getElementById('video-iframe');
+            clearTimeout(vidriftResumeTimer);
+            state.vidriftResumeSentForLoad = false;
+
             document.getElementById('loader-url-preview').textContent = url;
             document.getElementById('active-embed-url').textContent = url;
             refreshPlayerSubtitle();
+
+            // Block VAPlayer behind Ad & 18+ Safety Gate until explicitly confirmed by the user
+            if (state.activeProvider === 'vaplayer' && !isVaplayerAcknowledged()) {
+                showVaplayerGate();
+                return;
+            }
+
+            hideVaplayerGate();
             iframe.src = url;
         }
 
@@ -1843,8 +3359,12 @@
                 }
             }
             if (mode === 'tmdb' && !item.tmdbId) {
-                showToast('TMDB ID not available; using IMDb ID.');
-                return;
+                showToast('Fetching TMDB ID...');
+                await ensureTmdbId(item);
+                if (!item.tmdbId) {
+                    showToast('TMDB ID not available; using IMDb ID.');
+                    return;
+                }
             }
 
             state.playerIdMode = mode;
@@ -1866,10 +3386,22 @@
         }
 
         async function onSeasonChange() {
+            if (state.currentMedia) {
+                persistCurrentPlaybackProgress(true);
+            }
             const s = parseInt(document.getElementById('tv-season-select').value, 10) || 1;
             state.tvSeason = s;
             state.tvEpisode = 1;
             document.getElementById('tv-episode-input').value = '1';
+
+            if (state.currentMedia) {
+                const savedProg = getSavedProgressFor(state.currentMedia.uid, 'tv', s, 1);
+                state.currentPlaybackTime = savedProg.currentTime || 0;
+                state.currentDuration = savedProg.duration || 0;
+                state.resumeProgressSeconds = savedProg.currentTime >= 5 ? savedProg.currentTime : 0;
+            }
+            updateTimestampPillUI(false);
+
             refreshPlayerIframe();
             saveToRecentlyWatched(state.currentMedia, state.tvSeason, state.tvEpisode);
             if (state.currentMedia && state.currentMedia.tmdbId) {
@@ -1883,14 +3415,26 @@
         }
 
         async function selectEpisode(ep) {
+            if (state.currentMedia) {
+                persistCurrentPlaybackProgress(true);
+            }
             state.tvEpisode = ep;
             document.getElementById('tv-episode-input').value = String(ep);
+
+            if (state.currentMedia) {
+                const savedProg = getSavedProgressFor(state.currentMedia.uid, state.currentMedia.type, state.tvSeason, ep);
+                state.currentPlaybackTime = savedProg.currentTime || 0;
+                state.currentDuration = savedProg.duration || 0;
+                state.resumeProgressSeconds = savedProg.currentTime >= 5 ? savedProg.currentTime : 0;
+            }
+            updateTimestampPillUI(false);
+
             refreshPlayerIframe();
             saveToRecentlyWatched(state.currentMedia, state.tvSeason, state.tvEpisode);
-            if (state.currentMedia && state.currentMedia.tmdbId) {
+            if (state.currentMedia && state.currentMedia.type === 'tv' && state.currentMedia.tmdbId) {
                 await fetchAndRenderTmdbSeasonEpisodes(state.currentMedia.tmdbId, state.tvSeason);
             } else {
-                renderFallbackEpisodeButtons(Math.max(12, ep));
+                renderFallbackEpisodeButtons(Math.max(24, ep));
             }
         }
 
@@ -1916,6 +3460,11 @@
         }
 
         function closePlayerModal() {
+            clearTimeout(vidriftResumeTimer);
+            if (state.currentMedia) {
+                persistCurrentPlaybackProgress(true);
+            }
+            hideVaplayerGate();
             const modal = document.getElementById('player-modal');
             document.getElementById('video-iframe').src = '';
             modal.classList.add('hidden');
@@ -2066,23 +3615,9 @@
 
         function saveToRecentlyWatched(item, season, episode) {
             if (!item) return;
-            const entry = {
-                ...item,
-                season: season || 1,
-                episode: episode || 1,
-                updatedAt: Date.now()
-            };
-            state.mediaRegistry[item.uid] = entry;
-            state.recentlyWatched = [
-                entry,
-                ...state.recentlyWatched.filter(r => r.uid !== item.uid)
-            ].slice(0, 12);
-            localStorage.setItem('cinevault_recent_v2', JSON.stringify(state.recentlyWatched));
-            persistRegistry();
-
-            // Sync with Supabase if logged in
-            syncLocalDataToSupabase();
-            updateAuthUI();
+            state.tvSeason = season || 1;
+            state.tvEpisode = episode || 1;
+            persistCurrentPlaybackProgress(true);
         }
 
         function renderRecentlyWatched() {
@@ -2093,21 +3628,62 @@
                 return;
             }
             section.classList.remove('hidden');
-            grid.innerHTML = state.recentlyWatched.slice(0, 4).map(item => `
-                <div onclick="playMediaByUid('${item.uid}')" class="group cursor-pointer bg-dark-900 border border-white/10 hover:border-brand-500/50 rounded-xl p-2.5 flex items-center gap-3 transition">
-                    <img src="${item.poster}" alt="${item.title}" onerror="this.onerror=null;this.src='${getPosterFallback(item.title)}';" class="w-12 h-16 object-cover rounded-lg shrink-0">
-                    <div class="overflow-hidden flex-1">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${item.type === 'tv' ? 'bg-amber-500/20 text-amber-400' : 'bg-brand-500/20 text-brand-400'}">
-                                ${item.type === 'tv' ? `S${item.season || 1}:E${item.episode || 1}` : 'Movie'}
-                            </span>
-                            <span class="text-[10px] text-gray-400 font-mono truncate">${item.imdbId || `TMDB ${item.tmdbId}`}</span>
+            grid.innerHTML = state.recentlyWatched.slice(0, 4).map(item => {
+                const prog = Number(item.progressSeconds) || 0;
+                const dur = Number(item.durationSeconds) || 0;
+                const hasProgressBar = prog > 0 && dur > 0;
+                const pct = hasProgressBar ? Math.min(100, Math.max(3, Math.round((prog / dur) * 100))) : 0;
+                const formattedProg = formatSeconds(prog);
+
+                const badgeHTML = item.type === 'anime'
+                    ? `<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300">
+                           ANIME E${item.episode || 1}${prog >= 5 ? ` • ${formattedProg}` : ''}
+                       </span>`
+                    : (item.type === 'tv'
+                        ? `<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                               S${item.season || 1}:E${item.episode || 1}${prog >= 5 ? ` • ${formattedProg}` : ''}
+                           </span>`
+                        : (prog >= 5
+                            ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 flex items-center gap-1">
+                                   <i class="fa-regular fa-clock text-[9px]"></i> Resume ${formattedProg}
+                               </span>`
+                            : `<span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400">Movie</span>`
+                        )
+                    );
+
+                const idText = item.anilistId
+                    ? `AniList ${item.anilistId}`
+                    : (item.imdbId || `TMDB ${item.tmdbId}`);
+
+                return `
+                    <div onclick="playMediaByUid('${item.uid}')" class="group cursor-pointer bg-dark-900 border border-white/10 hover:border-brand-500/50 rounded-xl p-2.5 flex items-center gap-3 transition relative overflow-hidden">
+                        <div class="relative w-12 h-16 rounded-lg overflow-hidden shrink-0 bg-dark-800">
+                            <img src="${item.poster}" alt="${item.title}" onerror="this.onerror=null;this.src='${getPosterFallback(item.title)}';" class="w-full h-full object-cover">
+                            ${hasProgressBar ? `
+                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-black/80">
+                                    <div class="h-full bg-brand-500" style="width: ${pct}%"></div>
+                                </div>
+                            ` : ''}
                         </div>
-                        <h4 class="text-xs sm:text-sm font-bold text-white truncate mt-1 group-hover:text-brand-400 transition">${item.title}</h4>
+                        <div class="overflow-hidden flex-1">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                ${badgeHTML}
+                                <span class="text-[10px] text-gray-400 font-mono truncate">${idText}</span>
+                            </div>
+                            <h4 class="text-xs sm:text-sm font-bold text-white truncate mt-1 group-hover:text-brand-400 transition">${item.title}</h4>
+                            ${hasProgressBar ? `
+                                <div class="mt-1.5 flex items-center gap-2">
+                                    <div class="flex-1 h-1 bg-dark-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-brand-500 rounded-full" style="width: ${pct}%"></div>
+                                    </div>
+                                    <span class="text-[9px] font-mono text-gray-400 shrink-0">${pct}%</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <i class="fa-solid fa-circle-play text-brand-500 group-hover:scale-110 transition text-lg mr-1 shrink-0"></i>
                     </div>
-                    <i class="fa-solid fa-circle-play text-brand-500 text-lg mr-1"></i>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function clearRecentlyWatched() {
@@ -2178,18 +3754,20 @@
                 }).catch(err => console.warn('Session check warning:', err));
 
                 // 2. Listen for login / logout / token refresh events
-                supabaseClient.auth.onAuthStateChanged((event, session) => {
-                    if (session && session.user) {
-                        handleAuthenticatedUser(session.user);
-                    } else if (event === 'SIGNED_OUT') {
-                        state.currentUser = null;
-                        if (realtimeChannel && supabaseClient) {
-                            supabaseClient.removeChannel(realtimeChannel);
-                            realtimeChannel = null;
+                if (typeof supabaseClient.auth.onAuthStateChange === 'function') {
+                    supabaseClient.auth.onAuthStateChange((event, session) => {
+                        if (session && session.user) {
+                            handleAuthenticatedUser(session.user);
+                        } else if (event === 'SIGNED_OUT') {
+                            state.currentUser = null;
+                            if (realtimeChannel && supabaseClient) {
+                                supabaseClient.removeChannel(realtimeChannel);
+                                realtimeChannel = null;
+                            }
+                            updateAuthUI();
                         }
-                        updateAuthUI();
-                    }
-                });
+                    });
+                }
             } catch (e) {
                 console.warn('Supabase initialization error:', e);
             }
@@ -2220,8 +3798,28 @@
             [...cloudList, ...localList].forEach(item => {
                 if (!item || !item.uid) return;
                 const prev = map.get(item.uid);
-                if (!prev || (item.updatedAt || 0) >= (prev.updatedAt || 0)) {
+                if (!prev) {
                     map.set(item.uid, item);
+                } else {
+                    const mergedEpProgress = {
+                        ...(prev.episodeProgress || {}),
+                        ...(item.episodeProgress || {})
+                    };
+                    // For overlapping episodes, keep the entry with the newer updatedAt timestamp
+                    Object.keys(prev.episodeProgress || {}).forEach(epKey => {
+                        const a = prev.episodeProgress[epKey];
+                        const b = item.episodeProgress ? item.episodeProgress[epKey] : null;
+                        if (a && b) {
+                            mergedEpProgress[epKey] = (b.updatedAt || 0) >= (a.updatedAt || 0) ? b : a;
+                        }
+                    });
+
+                    const winner = (item.updatedAt || 0) >= (prev.updatedAt || 0) ? item : prev;
+                    map.set(item.uid, {
+                        ...prev,
+                        ...winner,
+                        episodeProgress: mergedEpProgress
+                    });
                 }
             });
             return Array.from(map.values())
@@ -2475,7 +4073,7 @@
                         throw new Error(`Username "@${cleanUsername}" already exists! Please choose a different username.`);
                     }
 
-                    // STEP 3: If user is created, verify we can insert their unique username into cinevault_sync
+                    // STEP 3: Insert unique username & sync state into cinevault_sync
                     if (data && data.user) {
                         recordKnownUsername(cleanUsername);
                         await handleAuthenticatedUser(data.user);
@@ -2662,23 +4260,74 @@
             state.directModalType = type;
             const mBtn = document.getElementById('direct-type-movie');
             const tBtn = document.getElementById('direct-type-tv');
+            const aBtn = document.getElementById('direct-type-anime');
             const tvFields = document.getElementById('direct-tv-fields');
+            const animeFields = document.getElementById('direct-anime-fields');
             const idInput = document.getElementById('direct-id-input');
+            const idLabel = document.getElementById('direct-id-label');
+            const idHint = document.getElementById('direct-id-hint');
+
+            const activeCls = 'py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-1.5 transition';
+            const inactiveCls = 'py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-1.5 transition';
+
+            mBtn.className = type === 'movie' ? activeCls : inactiveCls;
+            tBtn.className = type === 'tv' ? activeCls : inactiveCls;
+            aBtn.className = type === 'anime' ? activeCls : inactiveCls;
 
             if (type === 'movie') {
-                mBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition';
-                tBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition';
                 tvFields.classList.add('hidden');
-                if (idInput.value === '205715') idInput.value = 'tt23779058';
-            } else {
-                tBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-brand-500 text-white flex items-center justify-center gap-2 transition';
-                mBtn.className = 'py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm bg-dark-800 text-gray-300 border border-white/10 flex items-center justify-center gap-2 transition';
+                animeFields.classList.add('hidden');
+                idLabel.innerHTML = `IMDB ID (<code class="text-brand-400">tt...</code>) or TMDB ID (Numeric)`;
+                idInput.placeholder = 'e.g. tt23779058 or 656908';
+                idHint.innerHTML = `Doc examples: Movie <code class="text-gray-300">tt23779058</code> / <code class="text-gray-300">656908</code> • TV <code class="text-gray-300">1396</code> / <code class="text-gray-300">205715</code>`;
+                if (['205715', '1396', '16498', '21'].includes(idInput.value.trim())) idInput.value = 'tt23779058';
+            } else if (type === 'tv') {
                 tvFields.classList.remove('hidden');
-                if (idInput.value === 'tt23779058') idInput.value = '205715';
+                animeFields.classList.add('hidden');
+                idLabel.innerHTML = `IMDB ID (<code class="text-brand-400">tt...</code>) or TMDB ID (Numeric)`;
+                idInput.placeholder = 'e.g. 1396 or tt0903747';
+                idHint.innerHTML = `Doc examples: TV <code class="text-gray-300">1396</code> (Breaking Bad) • <code class="text-gray-300">205715</code> • <code class="text-gray-300">tt13159924</code>`;
+                if (['tt23779058', '16498', '21'].includes(idInput.value.trim())) idInput.value = '1396';
+            } else {
+                tvFields.classList.add('hidden');
+                animeFields.classList.remove('hidden');
+                idLabel.innerHTML = `AniList ID (Numeric) — <code class="text-brand-400">vidrift.net/embed/anilist/{id}/{ep}</code>`;
+                idInput.placeholder = 'e.g. 16498 (Attack on Titan) or 21 (One Piece)';
+                idHint.innerHTML = `AniList examples: <code class="text-gray-300">16498</code> (Attack on Titan) • <code class="text-gray-300">21</code> (One Piece) • <code class="text-gray-300">101922</code> (Demon Slayer)`;
+                if (['tt23779058', '205715', '1396', ''].includes(idInput.value.trim())) idInput.value = '16498';
             }
         }
 
-        async function quickLaunchById(rawId, type, season = 1, episode = 1) {
+        async function quickLaunchById(rawId, type, season = 1, episode = 1, dub = false) {
+            if (type === 'anime') {
+                const cleanAniId = rawId.replace(/[^0-9]/g, '');
+                if (!cleanAniId) {
+                    showToast('Please enter a numeric AniList ID (e.g., 16498)');
+                    return;
+                }
+                const uid = `anime-anilist-${cleanAniId}`;
+                const animeMedia = {
+                    uid,
+                    type: 'anime',
+                    title: `Anime (AniList #${cleanAniId})`,
+                    year: 'Anime',
+                    rating: 'HD',
+                    anilistId: cleanAniId,
+                    tmdbId: '',
+                    imdbId: '',
+                    dub: !!dub,
+                    genres: ['Anime'],
+                    poster: getPosterFallback(`AniList #${cleanAniId}`),
+                    backdrop: getBackdropFallback(`AniList #${cleanAniId}`),
+                    description: `Streaming AniList #${cleanAniId} Episode ${episode} (${dub ? 'English Dub' : 'Subtitled'}) via VidRift.`
+                };
+                state.activeProvider = 'vidrift';
+                localStorage.setItem('cinevault_provider', 'vidrift');
+                state.mediaRegistry[uid] = animeMedia;
+                openPlayerWithMedia(animeMedia, 1, episode);
+                return;
+            }
+
             const isImdb = rawId.toLowerCase().startsWith('tt');
             const uid = `direct-${type}-${rawId}`;
             let customMedia = {
@@ -2692,12 +4341,15 @@
                 genres: [type === 'tv' ? 'TV Series' : 'Movie'],
                 poster: getPosterFallback(rawId),
                 backdrop: getBackdropFallback(rawId),
-                description: `Streaming ${rawId} via vaplayer.ru embed API.`
+                description: `Streaming ${rawId} on CineVault.`
             };
 
             try {
                 if (isImdb) {
-                    const omdbRes = await fetch(`${OMDB_BASE}?apikey=${OMDB_API_KEY}&i=${encodeURIComponent(rawId)}`);
+                    const [omdbRes] = await Promise.all([
+                        fetch(`${OMDB_BASE}?apikey=${OMDB_API_KEY}&i=${encodeURIComponent(rawId)}`),
+                        ensureTmdbId(customMedia)
+                    ]);
                     if (omdbRes.ok) {
                         const omdbData = await omdbRes.json();
                         if (omdbData && omdbData.Response === 'True') {
@@ -2723,17 +4375,29 @@
 
         function launchDirectStream() {
             const rawId = document.getElementById('direct-id-input').value.trim();
-            const season = parseInt(document.getElementById('direct-season-input').value, 10) || 1;
-            const episode = parseInt(document.getElementById('direct-episode-input').value, 10) || 1;
             if (!rawId) {
-                showToast('Please enter a valid IMDB or TMDB ID');
+                showToast(state.directModalType === 'anime' ? 'Please enter a valid AniList ID' : 'Please enter a valid IMDB or TMDB ID');
                 return;
             }
+
+            if (state.directModalType === 'anime') {
+                const animeEp = parseInt(document.getElementById('direct-anime-episode-input').value, 10) || 1;
+                const isDub = !!document.getElementById('direct-anime-dub-checkbox').checked;
+                closeDirectPlayModal();
+                quickLaunchById(rawId, 'anime', 1, animeEp, isDub);
+                return;
+            }
+
+            const season = parseInt(document.getElementById('direct-season-input').value, 10) || 1;
+            const episode = parseInt(document.getElementById('direct-episode-input').value, 10) || 1;
             closeDirectPlayModal();
             quickLaunchById(rawId, state.directModalType, season, episode);
         }
 
         function openSettingsModal() {
+            document.getElementById('settings-default-provider').value = state.activeProvider;
+            document.getElementById('settings-vidrift-url').value = state.vidriftBaseUrl;
+            document.getElementById('settings-vidy-url').value = state.vidyBaseUrl;
             document.getElementById('settings-base-url').value = state.baseUrl;
             document.getElementById('settings-tmdb-key').value = TMDB_API_KEY;
             document.getElementById('settings-omdb-key').value = OMDB_API_KEY;
@@ -2745,11 +4409,31 @@
         }
 
         function saveSettings() {
+            const defaultProvider = document.getElementById('settings-default-provider').value || 'vidrift';
+            const vidriftUrl = document.getElementById('settings-vidrift-url').value.trim() || 'https://embed.vidrift.net';
+            const vidyUrl = document.getElementById('settings-vidy-url').value.trim() || 'https://www.vidy.st';
             const baseUrl = document.getElementById('settings-base-url').value.trim() || 'https://vaplayer.ru';
+
+            state.activeProvider = defaultProvider;
+            state.vidriftBaseUrl = vidriftUrl;
+            state.vidyBaseUrl = vidyUrl;
             state.baseUrl = baseUrl;
+
+            localStorage.setItem('cinevault_provider', defaultProvider);
+            localStorage.setItem('cinevault_vidrift_url', vidriftUrl);
+            localStorage.setItem('cinevault_vidy_url', vidyUrl);
             localStorage.setItem('cinevault_base_url', baseUrl);
+
+            // If player modal is currently open, refresh controls & iframe
+            const playerModal = document.getElementById('player-modal');
+            if (state.currentMedia && playerModal && !playerModal.classList.contains('hidden')) {
+                state.vaplayerGateBypassedForLoad = false;
+                updateServerUI();
+                refreshPlayerIframe();
+            }
+
             closeSettingsModal();
-            showToast('Stream base URL saved!');
+            showToast('Streaming server settings saved!');
         }
 
         /**************************************************************
@@ -2771,7 +4455,7 @@
 
         function copyEmbedHtml() {
             const url = buildEmbedUrl();
-            const html = `<iframe\n  src="${url}"\n  width="100%" height="100%"\n  frameborder="0" allowfullscreen\n></iframe>`;
+            const html = `<iframe\n  src="${url}"\n  width="100%" height="100%"\n  frameborder="0"\n  allowfullscreen\n  referrerpolicy="strict-origin-when-cross-origin"\n  allow="encrypted-media; autoplay *; fullscreen *"\n></iframe>`;
             copyTextToClipboard(html);
             showToast('HTML <iframe> code copied!');
         }
